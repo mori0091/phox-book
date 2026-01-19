@@ -58,10 +58,12 @@
 - `?>`, `===`, `++`
 
 ### Operators as functions
-- `(==) 1 1`, `(+) 1 2`
+- `(==) 1 1`
+- `(+) 1 2`
 
 ### Functions and constructors as operators
-- ``1 `Cons` Nil``, ``x `@{Eq Int}.(==)` y``
+- ``1 `Cons` Nil``
+- ``x `@{Eq Int}.(==)` y``
 
 ## Declarations
 - `type` Define Algebraic Data Type (ADT)
