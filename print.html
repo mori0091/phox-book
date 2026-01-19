@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f92901c0.js";
+            window.path_to_searchindex_js = "searchindex-54debaa5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-c75ae4f6.js"></script>
+        <script src="toc-6cdb6074.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,6 +191,103 @@
 <li><strong>Module system</strong><br>Rust like module / namespace definition.</li>
 <li><strong>Simple syntax</strong><br>Inspired by ML-family languages, with a focus on clarity.</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="install-phox"><a class="header" href="#install-phox">Install Phox</a></h1>
+<blockquote>
+<p>⚠️ Work in progress — Phox is under active development.</p>
+</blockquote>
+<h1 id="build"><a class="header" href="#build">Build</a></h1>
+<p>Clone the GitHub repository and build with Rust (tested on 1.80+, may work on earlier versions):</p>
+<pre><code class="language-sh">git clone https://github.com/mori0091/phox.git
+cd phox
+cargo build
+</code></pre>
+<h1 id="run-in-repl"><a class="header" href="#run-in-repl">Run in REPL</a></h1>
+<p>If you run without arguments, Phox starts an interactive REPL:</p>
+<pre><code class="language-sh">cargo run
+&gt; let rec fact = λn. if (0 == n) 1 else n * fact (n - 1);
+&gt; fact 5
+=&gt; 120: Int
+</code></pre>
+<p>In REPL, an input starts with <code>:</code> is recognized as a REPL command.<br>For example, <code>:?</code> shows the list of available commands:</p>
+<pre><code class="language-sh">cargo run
+&gt; :?
+
+:quit, :q
+    exit REPL.
+
+:help, :h, or :?
+    print this help messages.
+
+:load &lt;path&gt;, :l &lt;path&gt;
+    load and evaluate Phox source file specified by &lt;path&gt;.
+
+:modules, :m
+    print list of root modules.
+
+:using, :u
+    print list of using aliases for each modules.
+
+:symbols, :s
+    print list of symbols for each modules.
+
+:impls, or :impls [options]
+    print list of `impl`s.
+    options:
+        -v, or --verbose
+            print also the `impl`s' implementation.
+
+</code></pre>
+<h1 id="run-a-program-file"><a class="header" href="#run-a-program-file">Run a program file</a></h1>
+<p>Pass a <code>.phx</code> file to execute it:</p>
+<blockquote>
+<ul>
+<li><code>.phx</code> is the conventional extension for Phox source files (plain text).</li>
+<li><code>.txt</code> files are also accepted.</li>
+</ul>
+</blockquote>
+<pre><code class="language-sh">cargo run examples/fact.phx
+=&gt; 120: Int
+</code></pre>
+<h1 id="run-from-stdin"><a class="header" href="#run-from-stdin">Run from stdin</a></h1>
+<p>You can also pipe code from stdin (use <code>-</code> explicitly):</p>
+<pre><code class="language-sh">echo "1 + 2" | cargo run -
+=&gt; 3: Int
+</code></pre>
+<p>Resulting <code>value</code> and inferred <code>type</code> are printed on success, like this:</p>
+<pre><code class="language-sh">=&gt; value: type
+</code></pre>
+<p>On error, an error message is printed, like this:</p>
+<pre><code class="language-sh">parse error: UnrecognizedToken { /* snip... */ }
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="first-program"><a class="header" href="#first-program">First Program</a></h1>
+<pre><code class="language-rust ignore">&gt; type HelloWorld = Hi;
+=&gt; (): ()
+
+&gt; Hi
+=&gt; Hi: HelloWorld
+</code></pre>
+<blockquote>
+<p>Note: Phox currently has no string type or I/O.<br>That means you can’t even write “Hello, World!” yet —<br>but you can prove that <code>fact 5 = 120</code> with full type safety 😉</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="pipeline-example"><a class="header" href="#pipeline-example">Pipeline Example</a></h1>
+<pre><code class="language-rust ignore">&gt; counter 1 |&gt; take 5 |&gt; fold (+) 0
+=&gt; 15: Int
+
+&gt; counter 1 |&gt; take 10 |&gt; fold (+) 0
+=&gt; 55: Int
+
+&gt; counter 1 |&gt; take 5 |&gt; fold (*) 1
+=&gt; 120: Int
+
+&gt; counter 1 |&gt; map #(* 2) |&gt; take 5 |&gt; fold (flip Cons) Nil
+=&gt; Cons 10 (Cons 8 (Cons 6 (Cons 4 (Cons 2 Nil)))): List Int
+
+&gt; counter 1 |&gt; filter (\x. x / 2 * 2 == x) |&gt; take 5 |&gt; collect Nil
+=&gt; Cons 2 (Cons 4 (Cons 6 (Cons 8 (Cons 10 Nil)))): List Int
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="language-constructs"><a class="header" href="#language-constructs">Language constructs</a></h1>
 <h2 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h2>

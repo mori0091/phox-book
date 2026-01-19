@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Page not found - The Phox programming language</title>
-        <base href="/">
+        <title>Install Phox - The Phox programming language</title>
 
 
         <!-- Custom HTML head -->
@@ -175,14 +174,86 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="install-phox"><a class="header" href="#install-phox">Install Phox</a></h1>
+<blockquote>
+<p>⚠️ Work in progress — Phox is under active development.</p>
+</blockquote>
+<h1 id="build"><a class="header" href="#build">Build</a></h1>
+<p>Clone the GitHub repository and build with Rust (tested on 1.80+, may work on earlier versions):</p>
+<pre><code class="language-sh">git clone https://github.com/mori0091/phox.git
+cd phox
+cargo build
+</code></pre>
+<h1 id="run-in-repl"><a class="header" href="#run-in-repl">Run in REPL</a></h1>
+<p>If you run without arguments, Phox starts an interactive REPL:</p>
+<pre><code class="language-sh">cargo run
+&gt; let rec fact = λn. if (0 == n) 1 else n * fact (n - 1);
+&gt; fact 5
+=&gt; 120: Int
+</code></pre>
+<p>In REPL, an input starts with <code>:</code> is recognized as a REPL command.<br>For example, <code>:?</code> shows the list of available commands:</p>
+<pre><code class="language-sh">cargo run
+&gt; :?
+
+:quit, :q
+    exit REPL.
+
+:help, :h, or :?
+    print this help messages.
+
+:load &lt;path&gt;, :l &lt;path&gt;
+    load and evaluate Phox source file specified by &lt;path&gt;.
+
+:modules, :m
+    print list of root modules.
+
+:using, :u
+    print list of using aliases for each modules.
+
+:symbols, :s
+    print list of symbols for each modules.
+
+:impls, or :impls [options]
+    print list of `impl`s.
+    options:
+        -v, or --verbose
+            print also the `impl`s' implementation.
+
+</code></pre>
+<h1 id="run-a-program-file"><a class="header" href="#run-a-program-file">Run a program file</a></h1>
+<p>Pass a <code>.phx</code> file to execute it:</p>
+<blockquote>
+<ul>
+<li><code>.phx</code> is the conventional extension for Phox source files (plain text).</li>
+<li><code>.txt</code> files are also accepted.</li>
+</ul>
+</blockquote>
+<pre><code class="language-sh">cargo run examples/fact.phx
+=&gt; 120: Int
+</code></pre>
+<h1 id="run-from-stdin"><a class="header" href="#run-from-stdin">Run from stdin</a></h1>
+<p>You can also pipe code from stdin (use <code>-</code> explicitly):</p>
+<pre><code class="language-sh">echo "1 + 2" | cargo run -
+=&gt; 3: Int
+</code></pre>
+<p>Resulting <code>value</code> and inferred <code>type</code> are printed on success, like this:</p>
+<pre><code class="language-sh">=&gt; value: type
+</code></pre>
+<p>On error, an error message is printed, like this:</p>
+<pre><code class="language-sh">parse error: UnrecognizedToken { /* snip... */ }
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="features.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
+                            <a rel="next prefetch" href="hello_world.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -190,7 +261,13 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="features.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
+                    <a rel="next prefetch" href="hello_world.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
             </nav>
 
         </div>
