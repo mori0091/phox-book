@@ -1,13 +1,13 @@
 # The Phox Programming Language
 
-[The Phox Programming Language](./features.md)
+[🦊 The Phox Programming Language](./features.md)
 
-# Getting Started
-- [Install Phox]()
-- [First Program]()
-- [Pipeline Example]()
+# 🚀 Getting Started
+- [Install Phox](./install.md)
+- [First Program](./hello_world.md)
+- [Pipeline Example](./pipeline_example.md)
  
-# Language Guide
+# 📖 Language Guide
 - [Basic Components]()
   - [Comments]()
   - [Semicolon (item separator)]()
@@ -38,14 +38,14 @@
   - [Module definitions]()
   - [Import idntifiers]()
 
-# Language Reference
+# 🧭 Language Reference
 - [Language constructs](./language_constructs.md)
 - [Operators priority]()
 - [Grammer (BNF)]()
 
-# Standard Library
+# 🧰 Standard Library
 - [Standard Library]()
 
-# Design Notes
+# 🎶 Design Notes
 - [Design Notes]()
 
