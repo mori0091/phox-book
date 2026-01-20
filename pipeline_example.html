@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-54debaa5.js";
+            window.path_to_searchindex_js = "searchindex-0ec2892c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-6cdb6074.js"></script>
@@ -187,7 +187,7 @@
 &gt; counter 1 |&gt; map #(* 2) |&gt; take 5 |&gt; fold (flip Cons) Nil
 =&gt; Cons 10 (Cons 8 (Cons 6 (Cons 4 (Cons 2 Nil)))): List Int
 
-&gt; counter 1 |&gt; filter (\x. x / 2 * 2 == x) |&gt; take 5 |&gt; collect Nil
+&gt; counter 1 |&gt; filter (\x. x % 2 == 0) |&gt; take 5 |&gt; collect Nil
 =&gt; Cons 2 (Cons 4 (Cons 6 (Cons 8 (Cons 10 Nil)))): List Int
 </code></pre>
 

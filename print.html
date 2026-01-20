@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-54debaa5.js";
+            window.path_to_searchindex_js = "searchindex-0ec2892c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-6cdb6074.js"></script>
@@ -285,7 +285,7 @@ cargo build
 &gt; counter 1 |&gt; map #(* 2) |&gt; take 5 |&gt; fold (flip Cons) Nil
 =&gt; Cons 10 (Cons 8 (Cons 6 (Cons 4 (Cons 2 Nil)))): List Int
 
-&gt; counter 1 |&gt; filter (\x. x / 2 * 2 == x) |&gt; take 5 |&gt; collect Nil
+&gt; counter 1 |&gt; filter (\x. x % 2 == 0) |&gt; take 5 |&gt; collect Nil
 =&gt; Cons 2 (Cons 4 (Cons 6 (Cons 8 (Cons 10 Nil)))): List Int
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -351,7 +351,7 @@ cargo build
 <li><code>==</code>, <code>!=</code> Equality / Non-equality operators</li>
 <li><code>&lt;=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&gt;=</code> Comparison operators</li>
 <li><code>&amp;&amp;</code>, <code>||</code> Logical operators</li>
-<li><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> Arithmetic operators (TODO: add <code>%</code> modulo)</li>
+<li><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code> Arithmetic operators</li>
 <li><code>|&gt;</code>, <code>&lt;|</code> Pipeline operators</li>
 <li><code>&gt;&gt;</code>, <code>&lt;&lt;</code> Function composition operators</li>
 </ul>
