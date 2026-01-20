@@ -45,7 +45,7 @@
 - `==`, `!=` Equality / Non-equality operators
 - `<=`, `<`, `>`, `>=` Comparison operators
 - `&&`, `||` Logical operators
-- `+`, `-`, `*`, `/` Arithmetic operators (TODO: add `%` modulo)
+- `+`, `-`, `*`, `/`, `%` Arithmetic operators
 - `|>`, `<|` Pipeline operators
 - `>>`, `<<` Function composition operators
 
