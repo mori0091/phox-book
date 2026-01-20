@@ -38,7 +38,7 @@
   - [Module definitions]()
   - [Import idntifiers]()
 
-# 🧭 Language Reference
+# 📓 Language Reference
 - [Language constructs](./language_constructs.md)
 - [Operators priority]()
 - [Grammer (BNF)]()
@@ -49,3 +49,8 @@
 # 🎶 Design Notes
 - [Design Notes]()
 
+---
+
+[🧭 Roadmap](./roadmap.md)
+
+[🏁 Goal](./goal.md)
