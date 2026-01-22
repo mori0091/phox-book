@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-28838e7f.js";
+            window.path_to_searchindex_js = "searchindex-e71ccd66.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -326,6 +326,31 @@ pub struct SortSolver {
     // ...
 }
 <span class="boring">}</span></code></pre>
+<h2 id="rough-sketch-of-phox-type-system-process-pipeline"><a class="header" href="#rough-sketch-of-phox-type-system-process-pipeline">Rough sketch of Phox Type System process-pipeline</a></h2>
+<ol>
+<li>parse: source code “a” → RawAST such as RawTyVar(“a”)</li>
+<li>resolve phase: RawTyVar(“a”) → UnresolveTyVar(“a”), or RowVarId(r)</li>
+<li>sort infer phase:</li>
+</ol>
+<ul>
+<li>infer sort of UnresolveTyVar(“a”)</li>
+<li>UnresolveTyVar(“a”) → NatVarId(n) or TypeVarId(t)</li>
+<li>RowVarId(r) → RowVarId(r)</li>
+</ul>
+<ol start="4">
+<li>infer phase: infer and solve with UnifiedSolver</li>
+<li>apply phase: bake specialized code</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<ul>
+<li>sort-var does not appear in user code.</li>
+<li>row-var appears only in record/row contexts such as <code>@{...}</code>, so no ambiguity arises.</li>
+<li>Since both type-var and nat-var can appear as type parameters,
+they must resolve to either NatVarId or TypeVarId
+after sort-inference and resolution by the sort solver.</li>
+</ul>
+</blockquote>
 
                     </main>
 
