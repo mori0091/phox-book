@@ -138,3 +138,21 @@ pub struct SortSolver {
     // ...
 }
 ```
+
+## Rough sketch of Phox Type System process-pipeline
+
+1. parse: source code "a" → RawAST such as RawTyVar("a")
+2. resolve phase: RawTyVar("a") → UnresolveTyVar("a"), or RowVarId(r)
+3. sort infer phase:
+  - infer sort of UnresolveTyVar("a")
+  - UnresolveTyVar("a") → NatVarId(n) or TypeVarId(t)
+  - RowVarId(r) → RowVarId(r)
+4. infer phase: infer and solve with UnifiedSolver
+5. apply phase: bake specialized code
+
+> [!NOTE]
+> - sort-var does not appear in user code.
+> - row-var appears only in record/row contexts such as `@{...}`, so no ambiguity arises.
+> - Since both type-var and nat-var can appear as type parameters,
+>   they must resolve to either NatVarId or TypeVarId
+>   after sort-inference and resolution by the sort solver.
