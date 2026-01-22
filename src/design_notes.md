@@ -14,6 +14,12 @@
 > 1. Add new syntax `|op x|` and mark old syntax as **deprecated**.
 > 2. After `Nat` solver is implemented, remove old syntax `#(op x)`.
 
+> [!NOTE]
+> - `$a`, `@a`, and `#a` are primarily used in pretty-printed inferred types.
+> - In user code, variables should generally be written as plain identifiers like `a`.
+> - As a future extension, `#a` and `?a` may be accepted as syntactic sugar for
+>   explicit sort annotations `(a : Nat)` and `(a : Type)` respectively.
+ 
 ``` rust
 // Constructors for Sort expression (Sort is something lika a super-type of Kind)
 pub enum Sort {
