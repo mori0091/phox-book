@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Language constructs - The Phox programming language</title>
+        <title>Type definitions - The Phox programming language</title>
 
 
         <!-- Custom HTML head -->
@@ -174,157 +174,37 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="language-constructs"><a class="header" href="#language-constructs">Language constructs</a></h1>
-<h2 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h2>
-<h3 id="variables-and-type-variables"><a class="header" href="#variables-and-type-variables">Variables and type variables</a></h3>
-<blockquote>
-<p>In regular expression:<code>[a-z_]([-]*[a-zA-Z0-9_]+)*['?]*</code></p>
-</blockquote>
+                        <h1 id="type-definitions"><a class="header" href="#type-definitions">Type definitions</a></h1>
+<pre><code class="language-rust ignore">type Option a = Some a | None;
+type Pair a b = Pair a b;
+type Result e a = Ok a | Err e;</code></pre>
 <ul>
-<li><code>seq</code>, <code>x'</code>, <code>some?</code>, <code>foo-bar</code></li>
-<li><code>fooBar</code>, <code>a0</code>, <code>take_while</code></li>
-</ul>
-<h3 id="constructor-type-constructor-and-trait-names"><a class="header" href="#constructor-type-constructor-and-trait-names">Constructor, type constructor, and trait names</a></h3>
-<blockquote>
-<p>In regular expression:<code>[A-Z][a-zA-Z0-9_]*</code></p>
-</blockquote>
+<li>Variants can take <strong>0 or more arguments</strong>.</li>
+<li><strong>Newtype shorthand</strong> is available when:
 <ul>
-<li><code>List</code>, <code>Nil</code>, <code>Eq</code>, <code>Iter</code></li>
+<li>There is only one variant, and</li>
+<li>The type name and constructor name are the same, and</li>
+<li>The variant has exactly one tuple or one record argument.</li>
 </ul>
-<h3 id="module-names"><a class="header" href="#module-names">Module names</a></h3>
-<blockquote>
-<p>In regular expression:<code>[a-z_]([-]*[a-zA-Z0-9_]+)*</code></p>
-</blockquote>
-<ul>
-<li><code>core</code>, <code>cmp</code>, <code>iter</code></li>
+</li>
 </ul>
-<h3 id="module-path-qualified-module-names"><a class="header" href="#module-path-qualified-module-names">Module path (qualified module names)</a></h3>
-<blockquote>
-<p>A sequence of module names separated by <code>::</code></p>
-</blockquote>
-<ul>
-<li><code>::core::cmp</code>, <code>::core::list</code> Absolute path</li>
-<li><code>cmp</code>, <code>list</code>, <code>foo::bar</code> Relative path</li>
-</ul>
-<h3 id="qualified-names"><a class="header" href="#qualified-names">Qualified names</a></h3>
-<blockquote>
-<p>A module path followed by a variable, constructor, type constructor, or trait name</p>
-</blockquote>
-<ul>
-<li><code>::core::iter::seq</code>, <code>::core::iter::Seq</code>, <code>::core::iter::Iter</code></li>
-<li><code>iter::seq</code>, <code>iter::Seq</code>, <code>iter::Iter</code></li>
-</ul>
-<h2 id="literals"><a class="header" href="#literals">Literals</a></h2>
-<ul>
-<li><code>()</code> Unit value literal</li>
-<li><code>true</code>, <code>false</code> Boolean value literals</li>
-<li><code>0</code>,<code>100</code>, <code>-1</code> Integer value literals</li>
-</ul>
-<h2 id="primitive-types"><a class="header" href="#primitive-types">Primitive types</a></h2>
-<ul>
-<li><code>()</code> Unit type</li>
-<li><code>Bool</code> Boolean type</li>
-<li><code>Int</code> Integer type</li>
-<li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
-<li><code>@{x:t1, y:t2}</code> Record type</li>
-<li><code>t1 -&gt; t2</code> Function type</li>
-<li><code>T t</code>, <code>t1 t2</code> Type-level function application</li>
-</ul>
-<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<h3 id="infix-binary-operators"><a class="header" href="#infix-binary-operators">Infix (binary) operators</a></h3>
-<ul>
-<li><code>==</code>, <code>!=</code> Equality / Non-equality operators</li>
-<li><code>&lt;=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&gt;=</code> Comparison operators</li>
-<li><code>&amp;&amp;</code>, <code>||</code> Logical operators</li>
-<li><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code> Arithmetic operators</li>
-<li><code>|&gt;</code>, <code>&lt;|</code> Pipeline operators</li>
-<li><code>&gt;&gt;</code>, <code>&lt;&lt;</code> Function composition operators</li>
-</ul>
-<h3 id="prefix-operators"><a class="header" href="#prefix-operators">Prefix operators</a></h3>
-<ul>
-<li><code>nagete</code>, <code>-</code> Arithmetic negation</li>
-<li><code>not</code>, <code>!</code> Boolean not</li>
-</ul>
-<h3 id="user-defined-infix-operators"><a class="header" href="#user-defined-infix-operators">User defined infix operators</a></h3>
-<blockquote>
-<p>In regular expression:<code>[*+\-/!$%&amp;=^?&lt;&gt;]+</code></p>
-</blockquote>
-<ul>
-<li><code>?&gt;</code>, <code>===</code>, <code>++</code></li>
-</ul>
-<h3 id="operators-as-functions"><a class="header" href="#operators-as-functions">Operators as functions</a></h3>
-<ul>
-<li><code>(==) 1 1</code></li>
-<li><code>(+) 1 2</code></li>
-</ul>
-<h3 id="functions-and-constructors-as-operators"><a class="header" href="#functions-and-constructors-as-operators">Functions and constructors as operators</a></h3>
-<ul>
-<li><code>1 `Cons` Nil</code></li>
-<li><code>x `@{Eq Int}.(==)` y</code></li>
-</ul>
-<h2 id="declarations"><a class="header" href="#declarations">Declarations</a></h2>
-<ul>
-<li><code>type</code> Define Algebraic Data Type (ADT)</li>
-<li><code>trait</code> Define Multi-Parameter Type Class (MPTC)</li>
-<li><code>impl</code> Define type class instance implementation</li>
-<li><code>*let</code> Define generic function template</li>
-</ul>
-<h2 id="statements"><a class="header" href="#statements">Statements</a></h2>
-<ul>
-<li><code>mod</code> Define sub-module (TODO: move to declarations)</li>
-<li><code>use</code> Import identifiers (TODO: support local scope)</li>
-<li><code>let</code> Variable / function binding</li>
-<li><code>let rec</code> Recursive function binding</li>
-</ul>
-<h2 id="expressions"><a class="header" href="#expressions">Expressions</a></h2>
-<h3 id="value-expressions"><a class="header" href="#value-expressions">Value expressions</a></h3>
-<blockquote>
-<p>(evaluate to themselves; safe to generalize)</p>
-</blockquote>
-<ul>
-<li><code>()</code>, <code>true</code>, <code>0</code> Literals</li>
-<li><code>λp.e</code>/<code>\p.e</code> Lambda abstraction (function)</li>
-<li><code>(e1,)</code>, <code>(e1, e2)</code> Tuple value</li>
-<li><code>@{x:e1, y:e2}</code> Record value</li>
-<li><code>@{T t1 t2}</code> Trait record value</li>
-<li><code>#(e op)</code>/<code>#(e op _)</code> Infix-operator partial application (bind the 1st argument)</li>
-<li><code>#(op e)</code>/<code>#(_ op e)</code> Infix-operator partial application (bind the 2nd argument)</li>
-</ul>
-<blockquote>
-<p>Infix-operator partial applications (a.k.a. section syntax) are desugared into lambda abstraction.</p>
-</blockquote>
-<h3 id="non-value-expressions"><a class="header" href="#non-value-expressions">Non-value expressions</a></h3>
-<blockquote>
-<p>(require evaluation; not eligible for generalization)</p>
-</blockquote>
-<ul>
-<li><code>x</code> Evaluate variable</li>
-<li><code>e1 e2</code> Function application</li>
-<li><code>e.0</code> Tuple index access</li>
-<li><code>e.x</code> Record field access</li>
-<li><code>{ stmt1; stmt2; expr }</code> Block expression (evaluates to the last expression; introduces a new scope)</li>
-<li><code>if (e1) e2 else e3</code> If then else</li>
-<li><code>match (e) { p1 =&gt; e1, .. }</code> Pattern matching</li>
-</ul>
-<h2 id="patterns"><a class="header" href="#patterns">Patterns</a></h2>
-<ul>
-<li><code>_</code> Wildcard pattern</li>
-<li><code>()</code>, <code>true</code>, <code>0</code> Literal pattern</li>
-<li><code>x</code>, <code>foo</code> Variable pattern</li>
-<li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
-<li><code>(p1,)</code>, <code>(p1, p2)</code> Tuple pattern</li>
-<li><code>@{x:p1, y:p2}</code>, <code>@{x, y}</code> Record pattern</li>
-</ul>
+<pre><code class="language-rust ignore">// Normal form
+type Point a = Point @{ x: a, y: a };
+type Wrapper a = Wrapper (a,);
+
+// Newtype shorthand
+type Point a = @{ x: a, y: a };
+type Wrapper a = (a,);</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="type_definitions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="primitive_types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="design_notes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="language_constructs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -334,11 +214,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="type_definitions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="primitive_types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="design_notes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="language_constructs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

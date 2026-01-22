@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>🦊 The Phox Programming Language - The Phox programming language</title>
+        <title>Semicolon (item separator) - The Phox programming language</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7d3d52e7.js";
+            window.path_to_searchindex_js = "searchindex-cf45b06a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-a5e1bbce.js"></script>
+        <script src="toc-be888c5d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -174,29 +174,47 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="-the-phox-programming-language"><a class="header" href="#-the-phox-programming-language">🦊 The Phox Programming Language</a></h1>
-<p>Phox is a small functional programming language.</p>
-<p>It aims to be a simple yet expressive tool - your clever companion for exploring type theory and practical programming.</p>
-<h2 id="-features"><a class="header" href="#-features">✨ Features</a></h2>
+                        <h1 id="semicolon-item-separator"><a class="header" href="#semicolon-item-separator">Semicolon (item separator)</a></h1>
 <ul>
-<li><strong>Hindley–Milner type inference</strong><br>No need to annotate types in most cases. (In fact, Phox has no type-annotation syntax)</li>
-<li><strong>Algebraic data types (ADT)</strong><br>Define expressive data structures with variants.</li>
-<li><strong>Pattern matching</strong><br>Concise and powerful destructuring.</li>
-<li><strong>Newtype shorthand</strong><br>Cleaner syntax for single-constructor wrapper types.</li>
-<li><strong>First-class functions</strong><br>Functions are values, operators are functions too.</li>
-<li><strong>Generic function temlates</strong><br>Non-first class / overloadable generic function templates.</li>
-<li><strong>Multi-parameter typeclasses (<code>trait</code>/<code>impl</code>)</strong><br>Define the relationship between multiple methods and multiple types.</li>
-<li><strong>Trait record</strong><br>Typeclasses (<code>trait</code>/<code>impl</code>) can be instansiated as a first-class record value, with a simple syntax.</li>
-<li><strong>Module system</strong><br>Rust like module / namespace definition.</li>
-<li><strong>Simple syntax</strong><br>Inspired by ML-family languages, with a focus on clarity.</li>
+<li><code>;</code> separates multiple items (declarations / statements / expressions) in a block or at the top level.</li>
+<li>Each item is evaluated in order; only the last expression’s value is returned.</li>
+<li>If a block or top-level input ends with <code>;</code>, an implicit <code>()</code> is added.</li>
 </ul>
+<pre><code class="language-rust ignore">// Multiple items in a block
+{
+    let x = 1; // =&gt; (): ()  (discarded)
+    let y = 2; // =&gt; (): ()  (discarded)
+    x + y;     // =&gt; 3: Int  (discarded)
+    2 * x + y  // =&gt; 4: Int  (result)
+}
+// =&gt; 4: Int</code></pre>
+<pre><code class="language-rust ignore">// Multiple items in the top level
+let x = 1; // =&gt; (): ()  (discarded)
+let y = 2; // =&gt; (): ()  (discarded)
+x + y;     // =&gt; 3: Int  (discarded)
+2 * x + y  // =&gt; 4: Int  (result)
+// =&gt; 4: Int</code></pre>
+<pre><code class="language-rust ignore">// Items in a block ends with `;`
+{
+    1 + 2; // =&gt; 3: Int  (discarded)
+}
+// =&gt; (): ()</code></pre>
+<pre><code class="language-rust ignore">// Items in the top level ends with `;`
+1 + 2; // =&gt; 3: Int  (discarded)
+// =&gt; (): ()</code></pre>
+<pre><code class="language-rust ignore">// No items in a block
+{}
+// =&gt; (): ()</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="comments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
-                            <a rel="next prefetch" href="install.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="primitive_types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -206,8 +224,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="comments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
-                    <a rel="next prefetch" href="install.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="primitive_types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
