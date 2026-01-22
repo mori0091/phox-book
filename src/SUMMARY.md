@@ -1,6 +1,6 @@
 # The Phox Programming Language
 
-[🦊 The Phox Programming Language](./features.md)
+[🦊 The Phox Programming Language](./index.md)
 
 # 🚀 Getting Started
 - [Install Phox](./install.md)
@@ -9,10 +9,10 @@
  
 # 📖 Language Guide
 - [Basic Components]()
-  - [Comments]()
-  - [Semicolon (item separator)]()
-  - [Primitive Types]()
-  - [Type definitions]()
+  - [Comments](./comments.md)
+  - [Semicolon (item separator)](./semicolon.md)
+  - [Primitive Types](./primitive_types.md)
+  - [Type definitions](./type_definitions.md)
   - [Expressions]()
   - [Tuples and Records]()
   - [Functions]()
@@ -46,10 +46,8 @@
 # 🧰 Standard Library
 - [Standard Library]()
 
-# 🎶 Design Notes
-- [Design Notes]()
-
 ---
+[🎶 Design Notes](./design_notes.md)
 
 [🧭 Roadmap](./roadmap.md)
 
