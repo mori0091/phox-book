@@ -2,37 +2,63 @@
 
 ## Phox Type System (Future)
 
-| (sort) | variable       | constraint solver           | constraint     | var-gen / union-find | constraint set                     |
+| (kind) | variable       | constraint solver           | constraint     | var-gen / union-find | constraint set                     |
 |--------|----------------|-----------------------------|----------------|----------------------|------------------------------------|
-| Sort   | SortVarId `$a` | SortSolver                  | SortConstraint | SortVarContext       | SortConstraintSet                  |
+| Kind   | KindVarId `$a` | KindSolver                  | KindConstraint | KindVarContext       | KindConstraintSet                  |
 | Type   | TypeVarId `a`  | UnifiedSolver (Type + MPTC) | TypeConstraint | TypeContext          | UnifiedConstraintSet (Type + MPTC) |
 | Row    | RowVarId  `@a` | UnifiedSolver (Row)         | RowConstraint  | RowContext           | UnifiedConstraintSet (Row)         |
 | Nat    | NatVarId  `#a` | UnifiedSolver (Nat)         | NatConstraint  | NatContext           | UnifiedConstraintSet (Nat)         |
 
 > [!NOTE]
-> TODO: Change section-syntax from `#(op x)` to `|op x|`.
-> 1. Add new syntax `|op x|` and mark old syntax as **deprecated**.
+> TODO: Change section-syntax from `#(op x)` to `.(op x)` or something else.
+> 1. Add new syntax `.(op x)` and mark old syntax as **deprecated**.
 > 2. After `Nat` solver is implemented, remove old syntax `#(op x)`.
 
 > [!NOTE]
 > - `$a`, `@a`, and `#a` are primarily used in pretty-printed inferred types.
-> - In user code, variables should generally be written as plain identifiers like `a`.
-> - As a future extension, `#a` and `?a` may be accepted as syntactic sugar for
->   explicit sort annotations `(a : Nat)` and `(a : Type)` respectively.
- 
+> - KindVarId `$a` is internal use only for kind inference.
+> - In user code,
+>   - type-level variables **in expressions** should generally be written as plain identifiers like `a`.
+>   - type-level variables **in `type`/`trait` declarations** should be written as `a` and `#a`
+>     for Type and Nat variables respectively.
+> - As a future extension, `?a`, `#a`, and `@a` may be accepted as syntactic sugar **in expressions** for
+>   explicit kind annotations `(a : Type)`, `(a : Nat)`, and `(a : Row)` respectively.
+
+## Rough sketch of Phox Type System process-pipeline
+
+1. parse: source code "a" → RawAST such as RawTyVar("a")
+2. resolve phase: RawTyVar("a") → UnresolveTyVar("a"), or RowVarId(r)
+3. kind infer phase:
+  - infer kind of UnresolveTyVar("a")
+  - UnresolveTyVar("a") → NatVarId(n) or TypeVarId(t)
+  - RowVarId(r) → RowVarId(r)
+4. infer phase: infer and solve with UnifiedSolver
+5. apply phase: bake specialized code
+
+> [!NOTE]
+> - kind-var does not appear in user code.
+>   Kind inference resolves term-level variables to TypeVarId or NatVarId,
+>   while KindVarId is used only for kind-level inference.
+> - row-var appears only in record/row contexts such as `@{...}`, so no ambiguity arises.
+> - Since both type-var and nat-var can appear as type parameters,
+>   they must resolve to either NatVarId or TypeVarId
+>   after kind-inference and resolution by the kind solver.
+
+## Rough sketh of Phox Type System data sturctures
+
 ``` rust
-// Constructors for Sort expression (Sort is something lika a super-type of Kind)
-pub enum Sort {
-    Fun(Box<Sort>, Box<Sort>),   // s1 -> s2
+// Constructors for Kind expression
+pub enum Kind {
+    Fun(Box<Kind>, Box<Kind>),   // κ1 -> κ2
     Type,                        // τ
     Row,                         // ρ
     Nat,                         // ν
 }
 
-pub struct SortVarId(usize);  // `$a`, `$?100`
+pub struct KindVarId(usize);  // `$a`, `$?100`
 
-pub enum SortConstraint {
-    SortEq(Sort, Sort),
+pub enum KindConstraint {
+    KindEq(Kind, Kind),
 }
 
 pub enum TypeExpr {
@@ -42,8 +68,12 @@ pub enum TypeExpr {
 }
 
 impl TypeExpr {
-    pub fn sort_of(&self) -> Sort {
-        todo!();
+    pub fn kind_of(&self) -> Kind {
+        match self {
+            Self::Type {_} => Kind::Type, // TODO Typically returns `Kind::Type` or may returns `Kind::Fun(k1,k2)` for type-constructors
+            Self::Row {_}  => Kind::Row,
+            Self::Nat {_}  => Kind::Nat,
+        }
     }
 }
 
@@ -111,7 +141,7 @@ pub struct Scheme<T> {
 }
 
 pub struct Vars {
-    pub sort: Vec<SortVarId>,
+    pub kind: Vec<KindVarId>,
     pub row:  Vec<RowVarId>,
     pub nat:  Vec<NatVarId>,
     pub ty:   Vec<TypeVarId>,
@@ -130,29 +160,11 @@ pub struct UnifiedSolver {
 ```
 
 ``` rust
-pub struct SortConstraintSet {
-    pub requires_sort: BTreeSet<SortConstraint>,
+pub struct KindConstraintSet {
+    pub requires_kind: BTreeSet<KindConstraint>,
 }
 
-pub struct SortSolver {
+pub struct KindSolver {
     // ...
 }
 ```
-
-## Rough sketch of Phox Type System process-pipeline
-
-1. parse: source code "a" → RawAST such as RawTyVar("a")
-2. resolve phase: RawTyVar("a") → UnresolveTyVar("a"), or RowVarId(r)
-3. sort infer phase:
-  - infer sort of UnresolveTyVar("a")
-  - UnresolveTyVar("a") → NatVarId(n) or TypeVarId(t)
-  - RowVarId(r) → RowVarId(r)
-4. infer phase: infer and solve with UnifiedSolver
-5. apply phase: bake specialized code
-
-> [!NOTE]
-> - sort-var does not appear in user code.
-> - row-var appears only in record/row contexts such as `@{...}`, so no ambiguity arises.
-> - Since both type-var and nat-var can appear as type parameters,
->   they must resolve to either NatVarId or TypeVarId
->   after sort-inference and resolution by the sort solver.
