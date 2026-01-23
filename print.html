@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e71ccd66.js";
+            window.path_to_searchindex_js = "searchindex-1990138c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -540,10 +540,10 @@ type Wrapper a = (a,);</code></pre>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>(sort)</th><th>variable</th><th>constraint solver</th><th>constraint</th><th>var-gen / union-find</th><th>constraint set</th></tr>
+<tr><th>(kind)</th><th>variable</th><th>constraint solver</th><th>constraint</th><th>var-gen / union-find</th><th>constraint set</th></tr>
 </thead>
 <tbody>
-<tr><td>Sort</td><td>SortVarId <code>$a</code></td><td>SortSolver</td><td>SortConstraint</td><td>SortVarContext</td><td>SortConstraintSet</td></tr>
+<tr><td>Kind</td><td>KindVarId <code>$a</code></td><td>KindSolver</td><td>KindConstraint</td><td>KindVarContext</td><td>KindConstraintSet</td></tr>
 <tr><td>Type</td><td>TypeVarId <code>a</code></td><td>UnifiedSolver (Type + MPTC)</td><td>TypeConstraint</td><td>TypeContext</td><td>UnifiedConstraintSet (Type + MPTC)</td></tr>
 <tr><td>Row</td><td>RowVarId  <code>@a</code></td><td>UnifiedSolver (Row)</td><td>RowConstraint</td><td>RowContext</td><td>UnifiedConstraintSet (Row)</td></tr>
 <tr><td>Nat</td><td>NatVarId  <code>#a</code></td><td>UnifiedSolver (Nat)</td><td>NatConstraint</td><td>NatContext</td><td>UnifiedConstraintSet (Nat)</td></tr>
@@ -552,9 +552,9 @@ type Wrapper a = (a,);</code></pre>
 </div>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>TODO: Change section-syntax from <code>#(op x)</code> to <code>|op x|</code>.</p>
+<p>TODO: Change section-syntax from <code>#(op x)</code> to <code>.(op x)</code> or something else.</p>
 <ol>
-<li>Add new syntax <code>|op x|</code> and mark old syntax as <strong>deprecated</strong>.</li>
+<li>Add new syntax <code>.(op x)</code> and mark old syntax as <strong>deprecated</strong>.</li>
 <li>After <code>Nat</code> solver is implemented, remove old syntax <code>#(op x)</code>.</li>
 </ol>
 </blockquote>
@@ -562,25 +562,60 @@ type Wrapper a = (a,);</code></pre>
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <ul>
 <li><code>$a</code>, <code>@a</code>, and <code>#a</code> are primarily used in pretty-printed inferred types.</li>
-<li>In user code, variables should generally be written as plain identifiers like <code>a</code>.</li>
-<li>As a future extension, <code>#a</code> and <code>?a</code> may be accepted as syntactic sugar for
-explicit sort annotations <code>(a : Nat)</code> and <code>(a : Type)</code> respectively.</li>
+<li>KindVarId <code>$a</code> is internal use only for kind inference.</li>
+<li>In user code,
+<ul>
+<li>type-level variables <strong>in expressions</strong> should generally be written as plain identifiers like <code>a</code>.</li>
+<li>type-level variables <strong>in <code>type</code>/<code>trait</code> declarations</strong> should be written as <code>a</code> and <code>#a</code>
+for Type and Nat variables respectively.</li>
+</ul>
+</li>
+<li>As a future extension, <code>?a</code>, <code>#a</code>, and <code>@a</code> may be accepted as syntactic sugar <strong>in expressions</strong> for
+explicit kind annotations <code>(a : Type)</code>, <code>(a : Nat)</code>, and <code>(a : Row)</code> respectively.</li>
 </ul>
 </blockquote>
+<h2 id="rough-sketch-of-phox-type-system-process-pipeline"><a class="header" href="#rough-sketch-of-phox-type-system-process-pipeline">Rough sketch of Phox Type System process-pipeline</a></h2>
+<ol>
+<li>parse: source code “a” → RawAST such as RawTyVar(“a”)</li>
+<li>resolve phase: RawTyVar(“a”) → UnresolveTyVar(“a”), or RowVarId(r)</li>
+<li>kind infer phase:</li>
+</ol>
+<ul>
+<li>infer kind of UnresolveTyVar(“a”)</li>
+<li>UnresolveTyVar(“a”) → NatVarId(n) or TypeVarId(t)</li>
+<li>RowVarId(r) → RowVarId(r)</li>
+</ul>
+<ol start="4">
+<li>infer phase: infer and solve with UnifiedSolver</li>
+<li>apply phase: bake specialized code</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<ul>
+<li>kind-var does not appear in user code.
+Kind inference resolves term-level variables to TypeVarId or NatVarId,
+while KindVarId is used only for kind-level inference.</li>
+<li>row-var appears only in record/row contexts such as <code>@{...}</code>, so no ambiguity arises.</li>
+<li>Since both type-var and nat-var can appear as type parameters,
+they must resolve to either NatVarId or TypeVarId
+after kind-inference and resolution by the kind solver.</li>
+</ul>
+</blockquote>
+<h2 id="rough-sketh-of-phox-type-system-data-sturctures"><a class="header" href="#rough-sketh-of-phox-type-system-data-sturctures">Rough sketh of Phox Type System data sturctures</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>// Constructors for Sort expression (Sort is something lika a super-type of Kind)
-pub enum Sort {
-    Fun(Box&lt;Sort&gt;, Box&lt;Sort&gt;),   // s1 -&gt; s2
+</span>// Constructors for Kind expression
+pub enum Kind {
+    Fun(Box&lt;Kind&gt;, Box&lt;Kind&gt;),   // κ1 -&gt; κ2
     Type,                        // τ
     Row,                         // ρ
     Nat,                         // ν
 }
 
-pub struct SortVarId(usize);  // `$a`, `$?100`
+pub struct KindVarId(usize);  // `$a`, `$?100`
 
-pub enum SortConstraint {
-    SortEq(Sort, Sort),
+pub enum KindConstraint {
+    KindEq(Kind, Kind),
 }
 
 pub enum TypeExpr {
@@ -590,8 +625,12 @@ pub enum TypeExpr {
 }
 
 impl TypeExpr {
-    pub fn sort_of(&amp;self) -&gt; Sort {
-        todo!();
+    pub fn kind_of(&amp;self) -&gt; Kind {
+        match self {
+            Self::Type {_} =&gt; Kind::Type, // TODO Typically returns `Kind::Type` or may returns `Kind::Fun(k1,k2)` for type-constructors
+            Self::Row {_}  =&gt; Kind::Row,
+            Self::Nat {_}  =&gt; Kind::Nat,
+        }
     }
 }
 
@@ -660,7 +699,7 @@ pub enum NatConstraint {
 }
 
 pub struct Vars {
-    pub sort: Vec&lt;SortVarId&gt;,
+    pub kind: Vec&lt;KindVarId&gt;,
     pub row:  Vec&lt;RowVarId&gt;,
     pub nat:  Vec&lt;NatVarId&gt;,
     pub ty:   Vec&lt;TypeVarId&gt;,
@@ -679,39 +718,14 @@ pub struct UnifiedSolver {
 <span class="boring">}</span></code></pre>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub struct SortConstraintSet {
-    pub requires_sort: BTreeSet&lt;SortConstraint&gt;,
+</span>pub struct KindConstraintSet {
+    pub requires_kind: BTreeSet&lt;KindConstraint&gt;,
 }
 
-pub struct SortSolver {
+pub struct KindSolver {
     // ...
 }
 <span class="boring">}</span></code></pre>
-<h2 id="rough-sketch-of-phox-type-system-process-pipeline"><a class="header" href="#rough-sketch-of-phox-type-system-process-pipeline">Rough sketch of Phox Type System process-pipeline</a></h2>
-<ol>
-<li>parse: source code “a” → RawAST such as RawTyVar(“a”)</li>
-<li>resolve phase: RawTyVar(“a”) → UnresolveTyVar(“a”), or RowVarId(r)</li>
-<li>sort infer phase:</li>
-</ol>
-<ul>
-<li>infer sort of UnresolveTyVar(“a”)</li>
-<li>UnresolveTyVar(“a”) → NatVarId(n) or TypeVarId(t)</li>
-<li>RowVarId(r) → RowVarId(r)</li>
-</ul>
-<ol start="4">
-<li>infer phase: infer and solve with UnifiedSolver</li>
-<li>apply phase: bake specialized code</li>
-</ol>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<ul>
-<li>sort-var does not appear in user code.</li>
-<li>row-var appears only in record/row contexts such as <code>@{...}</code>, so no ambiguity arises.</li>
-<li>Since both type-var and nat-var can appear as type parameters,
-they must resolve to either NatVarId or TypeVarId
-after sort-inference and resolution by the sort solver.</li>
-</ul>
-</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="-roadmap"><a class="header" href="#-roadmap">🧭 Roadmap</a></h1>
 <h2 id="-mission-1"><a class="header" href="#-mission-1">✔️ Mission 1</a></h2>
