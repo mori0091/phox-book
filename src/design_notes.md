@@ -2,12 +2,12 @@
 
 ## Phox Type System (Future)
 
-| (kind) | variable       | constraint solver           | constraint     | var-gen / union-find | constraint set                     |
-|--------|----------------|-----------------------------|----------------|----------------------|------------------------------------|
-| Kind   | KindVarId `$a` | KindSolver                  | KindConstraint | KindVarContext       | KindConstraintSet                  |
-| Type   | TypeVarId `a`  | UnifiedSolver (Type + MPTC) | TypeConstraint | TypeContext          | UnifiedConstraintSet (Type + MPTC) |
-| Row    | RowVarId  `@a` | UnifiedSolver (Row)         | RowConstraint  | RowContext           | UnifiedConstraintSet (Row)         |
-| Nat    | NatVarId  `#a` | UnifiedSolver (Nat)         | NatConstraint  | NatContext           | UnifiedConstraintSet (Nat)         |
+| (kind)   | variable           | constraint solver           | constraint         | var-gen / union-find | constraint set                     |
+|----------|--------------------|-----------------------------|--------------------|----------------------|------------------------------------|
+| ~~Kind~~ | ~~KindVarId `$a`~~ | ~~KindSolver~~              | ~~KindConstraint~~ | ~~KindVarContext~~   | ~~KindConstraintSet~~              |
+| Type     | TypeVarId `a`      | UnifiedSolver (Type + MPTC) | TypeConstraint     | TypeContext          | UnifiedConstraintSet (Type + MPTC) |
+| Row      | RowVarId  `@a`     | UnifiedSolver (Row)         | RowConstraint      | RowContext           | UnifiedConstraintSet (Row)         |
+| Nat      | NatVarId  `#a`     | UnifiedSolver (Nat)         | NatConstraint      | NatContext           | UnifiedConstraintSet (Nat)         |
 
 > [!NOTE]
 > TODO: Change section-syntax from `#(op x)` to `.(op x)` or something else.
@@ -24,25 +24,27 @@
 > - As a future extension, `?a`, `#a`, and `@a` may be accepted as syntactic sugar **in expressions** for
 >   explicit kind annotations `(a : Type)`, `(a : Nat)`, and `(a : Row)` respectively.
 
+> [!NOTE]
+> Maybe `Nat` kind will not be implemented...  
+> it's not so useful.
+ 
 ## Rough sketch of Phox Type System process-pipeline
 
 1. parse: source code "a" → RawAST such as RawTyVar("a")
-2. resolve phase: RawTyVar("a") → UnresolveTyVar("a"), or RowVarId(r)
-3. kind infer phase:
-  - infer kind of UnresolveTyVar("a")
-  - UnresolveTyVar("a") → NatVarId(n) or TypeVarId(t)
-  - RowVarId(r) → RowVarId(r)
-4. infer phase: infer and solve with UnifiedSolver
-5. apply phase: bake specialized code
+2. resolve phase: RawTyVar("a") → RowVarId(r), NatVarId(n), or TypeVarId(t)
+  - if `a` appeared in Row context (`@{ .. | a }`), `a` shall be RowVarId(r)
+  - if `a` appeared in type parameters (`@{T a}`), `a` shall be NatVarId(n) or TypeVarId(t)
+    - check `type`/`trait` declarations and its parameters' kind,
+    - then assign NatVarId(n) or TypeVarId(t) according to the kind.
+3. infer phase: infer and solve with UnifiedSolver
+4. apply phase: bake specialized code
 
 > [!NOTE]
-> - kind-var does not appear in user code.
->   Kind inference resolves term-level variables to TypeVarId or NatVarId,
->   while KindVarId is used only for kind-level inference.
 > - row-var appears only in record/row contexts such as `@{...}`, so no ambiguity arises.
-> - Since both type-var and nat-var can appear as type parameters,
+> - Since both type-var and nat-var can appear as type parameters only in trait record `@{T a b}`,
 >   they must resolve to either NatVarId or TypeVarId
->   after kind-inference and resolution by the kind solver.
+>   after kind-check and kind-assignment in resolve phase.
+> - Kind inference and KindSolver are not needed for Phox.
 
 ## Rough sketh of Phox Type System data sturctures
 
@@ -55,11 +57,11 @@ pub enum Kind {
     Nat,                         // ν
 }
 
-pub struct KindVarId(usize);  // `$a`, `$?100`
+// pub struct KindVarId(usize);  // `$a`, `$?100`
 
-pub enum KindConstraint {
-    KindEq(Kind, Kind),
-}
+// pub enum KindConstraint {
+//     KindEq(Kind, Kind),
+// }
 
 pub enum TypeExpr {
     Type { ty: Type },
@@ -141,7 +143,7 @@ pub struct Scheme<T> {
 }
 
 pub struct Vars {
-    pub kind: Vec<KindVarId>,
+    // pub kind: Vec<KindVarId>,
     pub row:  Vec<RowVarId>,
     pub nat:  Vec<NatVarId>,
     pub ty:   Vec<TypeVarId>,
@@ -160,11 +162,11 @@ pub struct UnifiedSolver {
 ```
 
 ``` rust
-pub struct KindConstraintSet {
-    pub requires_kind: BTreeSet<KindConstraint>,
-}
+// pub struct KindConstraintSet {
+//     pub requires_kind: BTreeSet<KindConstraint>,
+// }
 
-pub struct KindSolver {
-    // ...
-}
+// pub struct KindSolver {
+//     // ...
+// }
 ```
