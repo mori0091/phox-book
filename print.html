@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1270414b.js";
+            window.path_to_searchindex_js = "searchindex-dd1a606b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -614,30 +614,33 @@ pub enum Kind {
     Fun(Box&lt;Kind&gt;, Box&lt;Kind&gt;),   // κ1 -&gt; κ2
     Type,                        // τ
     Row,                         // ρ
-    Nat,                         // ν
+    // Nat,                      // ν
 }
-
-// pub struct KindVarId(usize);  // `$a`, `$?100`
-
-// pub enum KindConstraint {
-//     KindEq(Kind, Kind),
-// }
 
 pub enum TypeExpr {
-    Type { ty: Type },
-    Row { row: Row },
-    Nat { nat: Nat },
+    Ty(Type),
+    Row(Row),
+    // Nat(Nat),
 }
 
-impl TypeExpr {
-    pub fn kind_of(&amp;self) -&gt; Kind {
-        match self {
-            Self::Type {_} =&gt; Kind::Type, // TODO Typically returns `Kind::Type` or may returns `Kind::Fun(k1,k2)` for type-constructors
-            Self::Row {_}  =&gt; Kind::Row,
-            Self::Nat {_}  =&gt; Kind::Nat,
-        }
-    }
-}
+// pub fn kind_of(texpr: &amp;TypeExpr) -&gt; Kind {
+//     match texpr {
+//         TypeExpr::Ty(ty) =&gt; match ty {
+//             Type::Var(_) =&gt; {
+//                 todo!()
+//             }
+//             Type::Con(_name) =&gt; {
+//                 todo!()
+//             }
+//             Type::App(ref t1, ref t2) =&gt; {
+//                 Kind::Fun(Box::new(kind_of(t1)), Box::new(kind_of(t2)))
+//             }
+//             Type::Fun(_, _) | Type::Tuple(_) | Type::Record(_) =&gt; {
+//                 Kind::Type
+//             }
+//         }
+//     }
+// }
 
 // Constructors for Type expression
 pub enum Type {
@@ -678,58 +681,51 @@ pub enum RowConstraint {
 }
 
 // Constructors for Nat expression
-pub enum Nat {
-    Lit(usize),                         // `0`, `1`, ...
-    Var(NatVarId),                      // `n`
-    Add(Box&lt;Nat&gt;, Box&lt;Nat&gt;),            // `n + m`
-}
+// pub enum Nat {
+//     Lit(usize),                         // `0`, `1`, ...
+//     Var(NatVarId),                      // `n`
+//     Add(Box&lt;Nat&gt;, Box&lt;Nat&gt;),            // `n + m`
+// }
 
-pub struct NatVarId(usize);  // `#a`, `#?100`
+// pub struct NatVarId(usize);  // `#a`, `#?100`
 
 // T.B.D.
-pub enum NatConstraint {
-    NatEq(Nat, Nat),
-    NatLT(Nat, Nat),
-    // NatEqu(...),   // natural number equation (e.g. `m + n = 0`)
-}
+// pub enum NatConstraint {
+//     NatEq(Nat, Nat),
+//     NatLT(Nat, Nat),
+//     // NatEqu(...),   // natural number equation (e.g. `m + n = 0`)
+// }
 
 <span class="boring">}</span></code></pre>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct Scheme&lt;T&gt; {
-    pub vars: Vars,                        // quantified variables              (ex. `∀ a.`)
-    pub constraints: UnifiedConstraintSet, // constraints / trait bounds        (ex. `(Eq a, Ord a) =&gt;`)
-    pub target: T,                         // the type, or                      (ex. `a -&gt; a -&gt; Bool`)
-                                           // the trait head produced by `impl` (ex. `Eq (List a)`)
+    pub vars: Vec&lt;Var&gt;,             // quantified variables              (ex. `∀ a.`)
+    pub constraints: ConstraintSet, // constraints / trait bounds        (ex. `(Eq a, Ord a) =&gt;`)
+    pub target: T,                  // the type, or                      (ex. `a -&gt; a -&gt; Bool`)
+                                    // the trait head produced by `impl` (ex. `Eq (List a)`)
 }
 
-pub struct Vars {
-    // pub kind: Vec&lt;KindVarId&gt;,
-    pub row:  Vec&lt;RowVarId&gt;,
-    pub nat:  Vec&lt;NatVarId&gt;,
-    pub ty:   Vec&lt;TypeVarId&gt;,
+pub enum Var {
+    Ty(TypeVarId),
+    Row(RowVarId),
+    // Nat(NatVarId),
 }
 
-pub struct UnifiedConstraintSet {
-    pub requires_row: BTreeSet&lt;RowConstraint&gt;,
-    pub requires_nat: BTreeSet&lt;NatConstraint&gt;,
-    pub primary_ty:   Option&lt;Box&lt;TraitHead&gt;&gt;,
-    pub requires_ty:  BTreeSet&lt;TypeConstraint&gt;,
+pub enum Constraint {
+    Ty(TypeConstraint),
+    Row(RowConstraint),
+    // Nat(NatConstraint),
+}
+
+pub struct ConstraintSet {
+    pub primary:  Option&lt;Box&lt;TraitHead&gt;&gt;,
+    pub requires: BTreeSet&lt;Constraint&gt;,
 }
 
 pub struct UnifiedSolver {
     // ...
 }
-<span class="boring">}</span></code></pre>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>// pub struct KindConstraintSet {
-//     pub requires_kind: BTreeSet&lt;KindConstraint&gt;,
-// }
-
-// pub struct KindSolver {
-//     // ...
-// }
 <span class="boring">}</span></code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="-roadmap"><a class="header" href="#-roadmap">🧭 Roadmap</a></h1>
