@@ -54,30 +54,33 @@ pub enum Kind {
     Fun(Box<Kind>, Box<Kind>),   // κ1 -> κ2
     Type,                        // τ
     Row,                         // ρ
-    Nat,                         // ν
+    // Nat,                      // ν
 }
-
-// pub struct KindVarId(usize);  // `$a`, `$?100`
-
-// pub enum KindConstraint {
-//     KindEq(Kind, Kind),
-// }
 
 pub enum TypeExpr {
-    Type { ty: Type },
-    Row { row: Row },
-    Nat { nat: Nat },
+    Ty(Type),
+    Row(Row),
+    // Nat(Nat),
 }
 
-impl TypeExpr {
-    pub fn kind_of(&self) -> Kind {
-        match self {
-            Self::Type {_} => Kind::Type, // TODO Typically returns `Kind::Type` or may returns `Kind::Fun(k1,k2)` for type-constructors
-            Self::Row {_}  => Kind::Row,
-            Self::Nat {_}  => Kind::Nat,
-        }
-    }
-}
+// pub fn kind_of(texpr: &TypeExpr) -> Kind {
+//     match texpr {
+//         TypeExpr::Ty(ty) => match ty {
+//             Type::Var(_) => {
+//                 todo!()
+//             }
+//             Type::Con(_name) => {
+//                 todo!()
+//             }
+//             Type::App(ref t1, ref t2) => {
+//                 Kind::Fun(Box::new(kind_of(t1)), Box::new(kind_of(t2)))
+//             }
+//             Type::Fun(_, _) | Type::Tuple(_) | Type::Record(_) => {
+//                 Kind::Type
+//             }
+//         }
+//     }
+// }
 
 // Constructors for Type expression
 pub enum Type {
@@ -118,55 +121,48 @@ pub enum RowConstraint {
 }
 
 // Constructors for Nat expression
-pub enum Nat {
-    Lit(usize),                         // `0`, `1`, ...
-    Var(NatVarId),                      // `n`
-    Add(Box<Nat>, Box<Nat>),            // `n + m`
-}
+// pub enum Nat {
+//     Lit(usize),                         // `0`, `1`, ...
+//     Var(NatVarId),                      // `n`
+//     Add(Box<Nat>, Box<Nat>),            // `n + m`
+// }
 
-pub struct NatVarId(usize);  // `#a`, `#?100`
+// pub struct NatVarId(usize);  // `#a`, `#?100`
 
 // T.B.D.
-pub enum NatConstraint {
-    NatEq(Nat, Nat),
-    NatLT(Nat, Nat),
-    // NatEqu(...),   // natural number equation (e.g. `m + n = 0`)
-}
+// pub enum NatConstraint {
+//     NatEq(Nat, Nat),
+//     NatLT(Nat, Nat),
+//     // NatEqu(...),   // natural number equation (e.g. `m + n = 0`)
+// }
 
 ```
 ``` rust
 pub struct Scheme<T> {
-    pub vars: Vars,                        // quantified variables              (ex. `∀ a.`)
-    pub constraints: UnifiedConstraintSet, // constraints / trait bounds        (ex. `(Eq a, Ord a) =>`)
-    pub target: T,                         // the type, or                      (ex. `a -> a -> Bool`)
-                                           // the trait head produced by `impl` (ex. `Eq (List a)`)
+    pub vars: Vec<Var>,             // quantified variables              (ex. `∀ a.`)
+    pub constraints: ConstraintSet, // constraints / trait bounds        (ex. `(Eq a, Ord a) =>`)
+    pub target: T,                  // the type, or                      (ex. `a -> a -> Bool`)
+                                    // the trait head produced by `impl` (ex. `Eq (List a)`)
 }
 
-pub struct Vars {
-    // pub kind: Vec<KindVarId>,
-    pub row:  Vec<RowVarId>,
-    pub nat:  Vec<NatVarId>,
-    pub ty:   Vec<TypeVarId>,
+pub enum Var {
+    Ty(TypeVarId),
+    Row(RowVarId),
+    // Nat(NatVarId),
 }
 
-pub struct UnifiedConstraintSet {
-    pub requires_row: BTreeSet<RowConstraint>,
-    pub requires_nat: BTreeSet<NatConstraint>,
-    pub primary_ty:   Option<Box<TraitHead>>,
-    pub requires_ty:  BTreeSet<TypeConstraint>,
+pub enum Constraint {
+    Ty(TypeConstraint),
+    Row(RowConstraint),
+    // Nat(NatConstraint),
+}
+
+pub struct ConstraintSet {
+    pub primary:  Option<Box<TraitHead>>,
+    pub requires: BTreeSet<Constraint>,
 }
 
 pub struct UnifiedSolver {
     // ...
 }
-```
-
-``` rust
-// pub struct KindConstraintSet {
-//     pub requires_kind: BTreeSet<KindConstraint>,
-// }
-
-// pub struct KindSolver {
-//     // ...
-// }
 ```
