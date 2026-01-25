@@ -10,9 +10,9 @@
 | Nat      | NatVarId  `#a`     | UnifiedSolver (Nat)         | NatConstraint      | NatContext           | UnifiedConstraintSet (Nat)         |
 
 > [!NOTE]
-> TODO: Change section-syntax from `#(op x)` to `.(op x)` or something else.
-> 1. Add new syntax `.(op x)` and mark old syntax as **deprecated**.
-> 2. After `Nat` solver is implemented, remove old syntax `#(op x)`.
+> TODO: Change section-syntax from `#(op x)` to `|(op x)`.
+> 1. [X] Add new syntax `|(op x)` and mark old syntax as **deprecated**.
+> 2. [ ] After `Nat` solver is implemented, remove old syntax `#(op x)`.
 
 > [!NOTE]
 > - `$a`, `@a`, and `#a` are primarily used in pretty-printed inferred types.
@@ -166,3 +166,4 @@ pub struct UnifiedSolver {
     // ...
 }
 ```
+

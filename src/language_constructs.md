@@ -86,11 +86,15 @@
 - `(e1,)`, `(e1, e2)` Tuple value
 - `@{x:e1, y:e2}` Record value
 - `@{T t1 t2}` Trait record value
-- `#(e op)`/`#(e op _)` Infix-operator partial application (bind the 1st argument)
-- `#(op e)`/`#(_ op e)` Infix-operator partial application (bind the 2nd argument)
+- `|(e op)`/`|(e op _)` Infix-operator partial application (bind the 1st argument)
+- `|(op e)`/`|(_ op e)` Infix-operator partial application (bind the 2nd argument)
 
 > Infix-operator partial applications (a.k.a. section syntax) are desugared into lambda abstraction.
 
+> [!NOTE]
+> Old section syntax `#(e op)`/`#(e op _)` and `#(op e)`/`#(_ op e)` are deprecated.  
+> Use new syntax `|(e op)`/`|(e op _)` and `|(op e)`/`|(_ op e)` instead.
+ 
 ### Non-value expressions
 > (require evaluation; not eligible for generalization)
 - `x` Evaluate variable
