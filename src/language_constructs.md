@@ -84,7 +84,7 @@
 - `()`, `true`, `0` Literals
 - `λp.e`/`\p.e` Lambda abstraction (function)
 - `(e1,)`, `(e1, e2)` Tuple value
-- `@{x:e1, y:e2}` Record value
+- `@{x = e1, y = e2}` Record value
 - `@{T t1 t2}` Trait record value
 - `|(e op)`/`|(e op _)` Infix-operator partial application (bind the 1st argument)
 - `|(op e)`/`|(_ op e)` Infix-operator partial application (bind the 2nd argument)
@@ -94,7 +94,11 @@
 > [!NOTE]
 > Old section syntax `#(e op)`/`#(e op _)` and `#(op e)`/`#(_ op e)` are deprecated.  
 > Use new syntax `|(e op)`/`|(e op _)` and `|(op e)`/`|(_ op e)` instead.
- 
+
+> [!IMPORTANT]
+> Old record value syntax `@{x: e1, y: e2}` are deprecated and **no longer supported**.  
+> Use new syntax `@{x = e1, y = e2}` instead.
+
 ### Non-value expressions
 > (require evaluation; not eligible for generalization)
 - `x` Evaluate variable
@@ -111,4 +115,8 @@
 - `x`, `foo` Variable pattern
 - `Nil`, `Cons p ps` Constructor pattern
 - `(p1,)`, `(p1, p2)` Tuple pattern
-- `@{x:p1, y:p2}`, `@{x, y}` Record pattern
+- `@{x = p1, y = p2}`, `@{x, y}` Record pattern
+
+> [!IMPORTANT]
+> Old record pattern syntax `@{x: p1, y: p2}` are deprecated and **no longer supported**.  
+> Use new syntax `@{x = p1, y = p2}` instead.
