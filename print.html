@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b9f4f3df.js";
+            window.path_to_searchindex_js = "searchindex-4d565b84.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -504,7 +504,7 @@ type Wrapper a = (a,);</code></pre>
 <li><code>()</code>, <code>true</code>, <code>0</code> Literals</li>
 <li><code>λp.e</code>/<code>\p.e</code> Lambda abstraction (function)</li>
 <li><code>(e1,)</code>, <code>(e1, e2)</code> Tuple value</li>
-<li><code>@{x:e1, y:e2}</code> Record value</li>
+<li><code>@{x = e1, y = e2}</code> Record value</li>
 <li><code>@{T t1 t2}</code> Trait record value</li>
 <li><code>|(e op)</code>/<code>|(e op _)</code> Infix-operator partial application (bind the 1st argument)</li>
 <li><code>|(op e)</code>/<code>|(_ op e)</code> Infix-operator partial application (bind the 2nd argument)</li>
@@ -515,6 +515,10 @@ type Wrapper a = (a,);</code></pre>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Old section syntax <code>#(e op)</code>/<code>#(e op _)</code> and <code>#(op e)</code>/<code>#(_ op e)</code> are deprecated.<br>Use new syntax <code>|(e op)</code>/<code>|(e op _)</code> and <code>|(op e)</code>/<code>|(_ op e)</code> instead.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Old record value syntax <code>@{x: e1, y: e2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = e1, y = e2}</code> instead.</p>
 </blockquote>
 <h3 id="non-value-expressions"><a class="header" href="#non-value-expressions">Non-value expressions</a></h3>
 <blockquote>
@@ -536,8 +540,12 @@ type Wrapper a = (a,);</code></pre>
 <li><code>x</code>, <code>foo</code> Variable pattern</li>
 <li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
 <li><code>(p1,)</code>, <code>(p1, p2)</code> Tuple pattern</li>
-<li><code>@{x:p1, y:p2}</code>, <code>@{x, y}</code> Record pattern</li>
+<li><code>@{x = p1, y = p2}</code>, <code>@{x, y}</code> Record pattern</li>
 </ul>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="design-notes"><a class="header" href="#design-notes">Design Notes</a></h1>
 <h2 id="phox-type-system-future"><a class="header" href="#phox-type-system-future">Phox Type System (Future)</a></h2>
