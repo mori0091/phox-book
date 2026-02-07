@@ -66,14 +66,14 @@
 - ``x `@{Eq Int}.(==)` y``
 
 ## Declarations
+- `mod` Define sub-module
+- `use` Import identifiers
 - `type` Define Algebraic Data Type (ADT)
 - `trait` Define Multi-Parameter Type Class (MPTC)
 - `impl` Define type class instance implementation
-- `*let` Define generic function template
+- `*let` Define generic/overloaded function template
 
 ## Statements
-- `mod` Define sub-module (TODO: move to declarations)
-- `use` Import identifiers (TODO: support local scope)
 - `let` Variable / function binding
 - `let rec` Recursive function binding
 
