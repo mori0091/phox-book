@@ -66,16 +66,27 @@
 - ``x `@{Eq Int}.(==)` y``
 
 ## Declarations
+At the top level of a module:
 - `mod` Define sub-module
 - `use` Import identifiers
 - `type` Define Algebraic Data Type (ADT)
 - `trait` Define Multi-Parameter Type Class (MPTC)
-- `impl` Define type class instance implementation
+- `impl` Define MPTC instance implementation
 - `*let` Define generic/overloaded function template
+- `let` Define a variable or function
+- `let rec` Define a recursive function
 
 ## Statements
+Within a local scope:
 - `let` Variable / function binding
 - `let rec` Recursive function binding
+
+> [!Note]
+> In the case of `let rec p = e;`,
+> - `p` must be a variable pattern.
+> In the case of `let p = e;`,
+> - At the top level of a module, `p` must be a variable pattern.
+> - Within a local scope, any pattern can be used for `p`.
 
 ## Expressions
 
