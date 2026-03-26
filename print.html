@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5fba58b3.js";
+            window.path_to_searchindex_js = "searchindex-3abd27f6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -482,19 +482,33 @@ type Wrapper a = (a,);</code></pre>
 <li><code>x `@{Eq Int}.(==)` y</code></li>
 </ul>
 <h2 id="declarations"><a class="header" href="#declarations">Declarations</a></h2>
+<p>At the top level of a module:</p>
 <ul>
 <li><code>mod</code> Define sub-module</li>
 <li><code>use</code> Import identifiers</li>
 <li><code>type</code> Define Algebraic Data Type (ADT)</li>
 <li><code>trait</code> Define Multi-Parameter Type Class (MPTC)</li>
-<li><code>impl</code> Define type class instance implementation</li>
+<li><code>impl</code> Define MPTC instance implementation</li>
 <li><code>*let</code> Define generic/overloaded function template</li>
+<li><code>let</code> Define a variable or function</li>
+<li><code>let rec</code> Define a recursive function</li>
 </ul>
 <h2 id="statements"><a class="header" href="#statements">Statements</a></h2>
+<p>Within a local scope:</p>
 <ul>
 <li><code>let</code> Variable / function binding</li>
 <li><code>let rec</code> Recursive function binding</li>
 </ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>In the case of <code>let rec p = e;</code>,</p>
+<ul>
+<li><code>p</code> must be a variable pattern.
+In the case of <code>let p = e;</code>,</li>
+<li>At the top level of a module, <code>p</code> must be a variable pattern.</li>
+<li>Within a local scope, any pattern can be used for <code>p</code>.</li>
+</ul>
+</blockquote>
 <h2 id="expressions"><a class="header" href="#expressions">Expressions</a></h2>
 <h3 id="value-expressions"><a class="header" href="#value-expressions">Value expressions</a></h3>
 <blockquote>
