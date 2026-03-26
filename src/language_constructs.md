@@ -84,6 +84,7 @@ Within a local scope:
 > [!Note]
 > In the case of `let rec p = e;`,
 > - `p` must be a variable pattern.
+>
 > In the case of `let p = e;`,
 > - At the top level of a module, `p` must be a variable pattern.
 > - Within a local scope, any pattern can be used for `p`.
