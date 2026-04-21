@@ -34,6 +34,7 @@
 - `()` Unit type
 - `Bool` Boolean type
 - `Int` Integer type
+- `@[t]` or `@[] t` Array type
 - `(t,)`, `(t1, t2)` Tuple type
 - `@{x:t1, y:t2}` Record type
 - `t1 -> t2` Function type
@@ -95,6 +96,7 @@ Within a local scope:
 > (evaluate to themselves; safe to generalize)
 - `()`, `true`, `0` Literals
 - `λp.e`/`\p.e` Lambda abstraction (function)
+- `@[]`, `@[e1]`, `@[e1, e2]` Array value
 - `(e1,)`, `(e1, e2)` Tuple value
 - `@{x = e1, y = e2}` Record value
 - `@{T t1 t2}` Trait record value
@@ -115,6 +117,7 @@ Within a local scope:
 > (require evaluation; not eligible for generalization)
 - `x` Evaluate variable
 - `e1 e2` Function application
+- `e1[e2]` Array index access
 - `e.0` Tuple index access
 - `e.x` Record field access
 - `{ stmt1; stmt2; expr }` Block expression (evaluates to the last expression; introduces a new scope)
@@ -126,6 +129,7 @@ Within a local scope:
 - `()`, `true`, `0` Literal pattern
 - `x`, `foo` Variable pattern
 - `Nil`, `Cons p ps` Constructor pattern
+- `@[]`, `@[p1, p2]`, `@[p, ps..]`, `@[p, ..]`, `@[ps..]`, `@[..]` Array pattern
 - `(p1,)`, `(p1, p2)` Tuple pattern
 - `@{x = p1, y = p2}`, `@{x, y}` Record pattern
 
