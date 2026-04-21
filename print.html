@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bcdb8b00.js";
+            window.path_to_searchindex_js = "searchindex-85802ae8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -444,6 +444,7 @@ type Wrapper a = (a,);</code></pre>
 <li><code>()</code> Unit type</li>
 <li><code>Bool</code> Boolean type</li>
 <li><code>Int</code> Integer type</li>
+<li><code>@[t]</code> or <code>@[] t</code> Array type</li>
 <li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
 <li><code>@{x:t1, y:t2}</code> Record type</li>
 <li><code>t1 -&gt; t2</code> Function type</li>
@@ -519,6 +520,7 @@ type Wrapper a = (a,);</code></pre>
 <ul>
 <li><code>()</code>, <code>true</code>, <code>0</code> Literals</li>
 <li><code>λp.e</code>/<code>\p.e</code> Lambda abstraction (function)</li>
+<li><code>@[]</code>, <code>@[e1]</code>, <code>@[e1, e2]</code> Array value</li>
 <li><code>(e1,)</code>, <code>(e1, e2)</code> Tuple value</li>
 <li><code>@{x = e1, y = e2}</code> Record value</li>
 <li><code>@{T t1 t2}</code> Trait record value</li>
@@ -543,6 +545,7 @@ type Wrapper a = (a,);</code></pre>
 <ul>
 <li><code>x</code> Evaluate variable</li>
 <li><code>e1 e2</code> Function application</li>
+<li><code>e1[e2]</code> Array index access</li>
 <li><code>e.0</code> Tuple index access</li>
 <li><code>e.x</code> Record field access</li>
 <li><code>{ stmt1; stmt2; expr }</code> Block expression (evaluates to the last expression; introduces a new scope)</li>
@@ -555,6 +558,7 @@ type Wrapper a = (a,);</code></pre>
 <li><code>()</code>, <code>true</code>, <code>0</code> Literal pattern</li>
 <li><code>x</code>, <code>foo</code> Variable pattern</li>
 <li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
+<li><code>@[]</code>, <code>@[p1, p2]</code>, <code>@[p, ps..]</code>, <code>@[p, ..]</code>, <code>@[ps..]</code>, <code>@[..]</code> Array pattern</li>
 <li><code>(p1,)</code>, <code>(p1, p2)</code> Tuple pattern</li>
 <li><code>@{x = p1, y = p2}</code>, <code>@{x, y}</code> Record pattern</li>
 </ul>
