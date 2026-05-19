@@ -29,11 +29,15 @@
 - `()` Unit value literal
 - `true`, `false` Boolean value literals
 - `0`,`100`, `-1` Integer value literals
+- `0u8`, `100u8`, `0xFFu8` 8-bit unsigned integer literals
+- `0u32`, `100u32`, `0xFFFFFFFFu32` 32-bit unsigned integer literals
 
 ## Primitive types
 - `()` Unit type
 - `Bool` Boolean type
 - `Int` Integer type
+- `u8` 8-bit unsigned integer type
+- `u32` 32-bit unsigned integer type
 - `@[t]` or `@[] t` Array type
 - `(t,)`, `(t1, t2)` Tuple type
 - `@{x:t1, y:t2}` Record type
@@ -123,6 +127,35 @@ Within a local scope:
 - `{ stmt1; stmt2; expr }` Block expression (evaluates to the last expression; introduces a new scope)
 - `if (e1) e2 else e3` If then else
 - `match (e) { p1 => e1, .. }` Pattern matching
+
+## Minumul Type Annotaions
+- `e: t` Optional type annotations for **expressions**  
+  This adds a **type equality constraint** between the inferred type of `e` and the annotated type `t`.  
+  This helps type inference and the constraint solver resolve the last mile of ambiguity.
+
+- Type annotations as **signatures** are required only in `trait` declarations.  
+  Other bindings (such as `let` and lambda parameters) do not accept type signatures.
+
+> [!NOTE]  
+> The `expr: t` syntax is only permitted for **atomic** expressions.  
+> If you need to type-annotate a complex expression,  
+> enclose the expression in parentheses and follow it with the type annotation.
+
+### Examples:
+```
+let add = \a.\b. (a + b): Int;
+
+add 2 + 3
+// => 5: Int
+```
+```
+(cast 10): u8
+// => 10: u8
+```
+```
+(cast 10): (Result e u8)
+// => Ok 10: Result RuntimeError u8
+```
 
 ## Patterns
 - `_` Wildcard pattern
