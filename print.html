@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-85802ae8.js";
+            window.path_to_searchindex_js = "searchindex-0aa6181d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-be888c5d.js"></script>
@@ -438,12 +438,16 @@ type Wrapper a = (a,);</code></pre>
 <li><code>()</code> Unit value literal</li>
 <li><code>true</code>, <code>false</code> Boolean value literals</li>
 <li><code>0</code>,<code>100</code>, <code>-1</code> Integer value literals</li>
+<li><code>0u8</code>, <code>100u8</code>, <code>0xFFu8</code> 8-bit unsigned integer literals</li>
+<li><code>0u32</code>, <code>100u32</code>, <code>0xFFFFFFFFu32</code> 32-bit unsigned integer literals</li>
 </ul>
 <h2 id="primitive-types-1"><a class="header" href="#primitive-types-1">Primitive types</a></h2>
 <ul>
 <li><code>()</code> Unit type</li>
 <li><code>Bool</code> Boolean type</li>
 <li><code>Int</code> Integer type</li>
+<li><code>u8</code> 8-bit unsigned integer type</li>
+<li><code>u32</code> 32-bit unsigned integer type</li>
 <li><code>@[t]</code> or <code>@[] t</code> Array type</li>
 <li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
 <li><code>@{x:t1, y:t2}</code> Record type</li>
@@ -552,6 +556,31 @@ type Wrapper a = (a,);</code></pre>
 <li><code>if (e1) e2 else e3</code> If then else</li>
 <li><code>match (e) { p1 =&gt; e1, .. }</code> Pattern matching</li>
 </ul>
+<h2 id="minumul-type-annotaions"><a class="header" href="#minumul-type-annotaions">Minumul Type Annotaions</a></h2>
+<ul>
+<li>
+<p><code>e: t</code> Optional type annotations for <strong>expressions</strong><br>This adds a <strong>type equality constraint</strong> between the inferred type of <code>e</code> and the annotated type <code>t</code>.<br>This helps type inference and the constraint solver resolve the last mile of ambiguity.</p>
+</li>
+<li>
+<p>Type annotations as <strong>signatures</strong> are required only in <code>trait</code> declarations.<br>Other bindings (such as <code>let</code> and lambda parameters) do not accept type signatures.</p>
+</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The <code>expr: t</code> syntax is only permitted for <strong>atomic</strong> expressions.<br>If you need to type-annotate a complex expression,<br>enclose the expression in parentheses and follow it with the type annotation.</p>
+</blockquote>
+<h3 id="examples"><a class="header" href="#examples">Examples:</a></h3>
+<pre><code>let add = \a.\b. (a + b): Int;
+
+add 2 + 3
+// =&gt; 5: Int
+</code></pre>
+<pre><code>(cast 10): u8
+// =&gt; 10: u8
+</code></pre>
+<pre><code>(cast 10): (Result e u8)
+// =&gt; Ok 10: Result RuntimeError u8
+</code></pre>
 <h2 id="patterns"><a class="header" href="#patterns">Patterns</a></h2>
 <ul>
 <li><code>_</code> Wildcard pattern</li>
