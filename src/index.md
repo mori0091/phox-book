@@ -7,7 +7,8 @@ It aims to be a simple yet expressive tool - your clever companion for exploring
 ## ✨ Features
 
 - **Hindley–Milner type inference**  
-  No need to annotate types in most cases. (In fact, Phox has no type-annotation syntax)
+  No need to annotate types in most cases.  
+  (Phox includes a minimal type-annotation syntax for expressions, used only when disambiguation is needed.)
 - **Algebraic data types (ADT)**  
   Define expressive data structures with variants.
 - **Pattern matching**  
