@@ -16,8 +16,8 @@
         <link rel="icon" href="favicon-de23e50b.svg">
         <link rel="shortcut icon" href="favicon-8114d1fc.png">
         <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
         <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-17025f00.js";
+            window.path_to_searchindex_js = "searchindex-886cf50e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-be888c5d.js"></script>
+        <script src="toc-3e2bc6e3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -262,17 +262,21 @@ cargo build
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="first-program"><a class="header" href="#first-program">First Program</a></h1>
-<pre><code class="language-rust ignore">&gt; type HelloWorld = Hi;
-=&gt; (): ()
-
-&gt; Hi
-=&gt; Hi: HelloWorld
+<pre><code class="language-rust ignore">&gt; "Hello" ++ " " ++ "World"
+=&gt; "Hello World": ScalarString
 </code></pre>
-<blockquote>
-<p>Note: Phox currently has no string type or I/O.<br>That means you can’t even write “Hello, World!” yet —<br>but you can prove that <code>fact 5 = 120</code> with full type safety 😉</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Phox is still under active development.<br>I/O primitives are not yet implemented, but the following core features are already available:</p>
+<ul>
+<li>Type-level Unicode String Framework (<code>ScalarString</code>, UTF-8, etc.)</li>
+<li>Pretty-Printing Combinators</li>
+<li>Rich pure-functional core libraries (iter, array, fmt, …)</li>
+</ul>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="pipeline-example"><a class="header" href="#pipeline-example">Pipeline Example</a></h1>
+<h2 id="iterator--generator--sink-pipelines"><a class="header" href="#iterator--generator--sink-pipelines"><em>Iterator / Generator / Sink</em> pipelines</a></h2>
 <pre><code class="language-rust ignore">&gt; counter 1 |&gt; take 5 |&gt; fold (+) 0
 =&gt; 15: Int
 
@@ -282,12 +286,46 @@ cargo build
 &gt; counter 1 |&gt; take 5 |&gt; fold (*) 1
 =&gt; 120: Int
 
-&gt; counter 1 |&gt; map |(* 2) |&gt; take 5 |&gt; fold (flip Cons) Nil
-=&gt; Cons 10 (Cons 8 (Cons 6 (Cons 4 (Cons 2 Nil)))): List Int
-
-&gt; counter 1 |&gt; filter (\x. x % 2 == 0) |&gt; take 5 |&gt; collect Nil
+&gt; counter 1 |&gt; filter (|(% 2) &gt;&gt; |(== 0)) |&gt; take 5 |&gt; collect Nil
 =&gt; Cons 2 (Cons 4 (Cons 6 (Cons 8 (Cons 10 Nil)))): List Int
+
+&gt; counter 1 |&gt; filter (|(% 2) &gt;&gt; |(== 0)) |&gt; take 5 |&gt; collect @[]
+=&gt; @[2, 4, 6, 8, 10]: @[Int]
+
+&gt; collect "abc" "def"
+=&gt; "abcdef": ScalarString
+
+&gt; "abc" ++ "def"
+=&gt; "abcdef": ScalarString
+
+&gt; @[1,2,3] ++ @[10,20]
+=&gt; @[1, 2, 3, 10, 20]: @[Int]
+
+&gt; "Hello" ++ " " ++ "World"
+=&gt; "Hello World": ScalarString
 </code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The infix operator <code>++</code> is synonym of <code>collect</code> function.</p>
+</blockquote>
+<h2 id="pretty-printing-combinator-pipelines"><a class="header" href="#pretty-printing-combinator-pipelines"><em>Pretty-Printing combinator</em> pipelines</a></h2>
+<pre><code class="language-rust ignore">&gt; use ::core::fmt::*;
+=&gt; (): ()
+
+&gt; show &lt;| hex-dump &lt;| cast "🎉🤣👍🍺"
+=&gt; "F0 9F 8E 89 F0 9F A4 A3 F0 9F 91 8D F0 9F 8D BA": ScalarString
+
+&gt; show &lt;| sep_by ", " &lt;| map single-quote &lt;| "🎉🤣👍🍺"
+=&gt; "'🎉', '🤣', '👍', '🍺'": ScalarString
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The <code>::core::fmt</code> module is <strong>not imported by default</strong>.<br>You must either:</p>
+<ul>
+<li>call functions with a module path such as <code>fmt::show</code>, or</li>
+<li>explicitly import the module with <code>use ::core::fmt::*;</code></li>
+</ul>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
 <h2 id="line-comments"><a class="header" href="#line-comments">Line comments</a></h2>
@@ -368,10 +406,18 @@ x + y;     // =&gt; 3: Int  (discarded)
 <tr><td><code>Bool</code></td><td><code>true</code>, <code>fales</code></td><td>Boolean type. True or false.</td></tr>
 <tr><td><code>Int</code></td><td><code>0</code>, <code>100</code>, <code>-1</code>, …</td><td>Integer type. (currently 64-bit integer)</td></tr>
 <tr><td><code>u8</code></td><td><code>0u8</code>, <code>100u8</code>, <code>0xFFu8</code>, …</td><td>8-bit unsigned integer type.</td></tr>
+<tr><td><code>u16</code></td><td><code>0u16</code>, <code>100u16</code>, <code>0xFFFFu16</code>, …</td><td>16-bit unsigned integer type.</td></tr>
 <tr><td><code>u32</code></td><td><code>0u32</code>, <code>100u32</code>, <code>0xFFFFFFFFu32</code>, …</td><td>32-bit unsigned integer type.</td></tr>
+<tr><td><code>u64</code></td><td><code>0u64</code>, <code>100u64</code>, <code>0xFFFFFFFFFFFFFFFFu64</code>, …</td><td>64-bit unsigned integer type.</td></tr>
+<tr><td><code>ScalarValue</code></td><td><code>'A'</code>, <code>'\n'</code>, <code>'🎉'</code>, …</td><td>Unicode Scalar Value (i.e. character)</td></tr>
+<tr><td><code>ScalarString</code></td><td><code>"abc"</code>, <code>"🎉🤣👍🍺"</code>, …</td><td>Unicode UTF-8 string</td></tr>
 </tbody>
 </table>
 </div>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>ScalarString</code> is synonym of <code>Str ScalarValue</code> type.</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="type-definitions"><a class="header" href="#type-definitions">Type definitions</a></h1>
 <pre><code class="language-rust ignore">type Option a = Some a | None;
@@ -383,7 +429,7 @@ type Result e a = Ok a | Err e;</code></pre>
 <ul>
 <li>There is only one variant, and</li>
 <li>The type name and constructor name are the same, and</li>
-<li>The variant has exactly one tuple or one record argument.</li>
+<li>The variant has exactly one tuple, one record, or one array argument.</li>
 </ul>
 </li>
 </ul>
@@ -441,7 +487,11 @@ type Wrapper a = (a,);</code></pre>
 <li><code>true</code>, <code>false</code> Boolean value literals</li>
 <li><code>0</code>,<code>100</code>, <code>-1</code> Integer value literals</li>
 <li><code>0u8</code>, <code>100u8</code>, <code>0xFFu8</code> 8-bit unsigned integer literals</li>
+<li><code>0u16</code>, <code>100u16</code>, <code>0xFFFFu16</code> 16-bit unsigned integer literals</li>
 <li><code>0u32</code>, <code>100u32</code>, <code>0xFFFFFFFFu32</code> 32-bit unsigned integer literals</li>
+<li><code>0u64</code>, <code>100u64</code>, <code>0xFFFFFFFFFFFFFFFFu64</code> 64-bit unsigned integer literals</li>
+<li><code>'A'</code>, <code>'\n'</code>, <code>'🎉'</code> Unicode Scalar Value literals</li>
+<li><code>"abc"</code>, <code>"🎉🤣👍🍺"</code> Unicode UTF-8 string literals</li>
 </ul>
 <h2 id="primitive-types-1"><a class="header" href="#primitive-types-1">Primitive types</a></h2>
 <ul>
@@ -449,7 +499,11 @@ type Wrapper a = (a,);</code></pre>
 <li><code>Bool</code> Boolean type</li>
 <li><code>Int</code> Integer type</li>
 <li><code>u8</code> 8-bit unsigned integer type</li>
+<li><code>u16</code> 16-bit unsigned integer type</li>
 <li><code>u32</code> 32-bit unsigned integer type</li>
+<li><code>u64</code> 32-bit unsigned integer type</li>
+<li><code>ScalarValue</code> Unicode Scalar Value type</li>
+<li><code>ScalarString</code> Unicode UTF-8 string type (synonym of <code>Str ScalarValue</code>)</li>
 <li><code>@[t]</code> or <code>@[] t</code> Array type</li>
 <li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
 <li><code>@{x:t1, y:t2}</code> Record type</li>
@@ -476,7 +530,7 @@ type Wrapper a = (a,);</code></pre>
 <p>In regular expression:<code>[*+\-/!$%&amp;=^?&lt;&gt;]+</code></p>
 </blockquote>
 <ul>
-<li><code>?&gt;</code>, <code>===</code>, <code>++</code></li>
+<li><code>?&gt;</code>, <code>===</code>, <code>&lt;+&gt;</code></li>
 </ul>
 <h3 id="operators-as-functions"><a class="header" href="#operators-as-functions">Operators as functions</a></h3>
 <ul>
@@ -587,6 +641,7 @@ add 2 + 3
 <ul>
 <li><code>_</code> Wildcard pattern</li>
 <li><code>()</code>, <code>true</code>, <code>0</code> Literal pattern</li>
+<li><code>'A'</code>, <code>'🎉'</code> Unicode Scalar Value literal pattern</li>
 <li><code>x</code>, <code>foo</code> Variable pattern</li>
 <li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
 <li><code>@[]</code>, <code>@[p1, p2]</code>, <code>@[p, ps..]</code>, <code>@[p, ..]</code>, <code>@[ps..]</code>, <code>@[..]</code> Array pattern</li>
@@ -598,8 +653,14 @@ add 2 + 3
 <p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="design-notes"><a class="header" href="#design-notes">Design Notes</a></h1>
-<h2 id="phox-type-system-future"><a class="header" href="#phox-type-system-future">Phox Type System (Future)</a></h2>
+<h1 id="phox-type-system-future"><a class="header" href="#phox-type-system-future">Phox Type System (Future)</a></h1>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>In this section, we will explore a vision for the Phox Type System that <strong>was
+technically feasible but was not adopted</strong>. For reference…</p>
+</blockquote>
+<hr>
+<h2 id="row-kind-row-polymorphism-and-nat-kind-type-level-natural-numbers"><a class="header" href="#row-kind-row-polymorphism-and-nat-kind-type-level-natural-numbers"><code>Row</code> kind (Row polymorphism) and <code>Nat</code> kind (Type-level Natural numbers)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -813,16 +874,22 @@ pub struct UnifiedSolver {
 <hr>
 <h2 id="extra-mission-1"><a class="header" href="#extra-mission-1">Extra Mission 1</a></h2>
 <ul>
-<li><input disabled="" type="checkbox"> Split/Merge record operators</li>
-<li><input disabled="" type="checkbox"> Row Kind / Row polymorphism</li>
-<li><input disabled="" type="checkbox"> Row Kind inference w/o Kind annotation</li>
+<li><input disabled="" type="checkbox" checked=""> Safe and Unsafe numeric conversion</li>
+<li><input disabled="" type="checkbox" checked=""> Array, String type</li>
+<li><input disabled="" type="checkbox" checked=""> Pretty-Printing Combinators</li>
 </ul>
-<h2 id="extra-mission-2"><a class="header" href="#extra-mission-2">Extra Mission 2</a></h2>
+<h2 id="extra-mission-2---proc-system"><a class="header" href="#extra-mission-2---proc-system">Extra Mission 2 - Proc system</a></h2>
 <ul>
-<li><input disabled="" type="checkbox"> Safe subset of Nat Kind</li>
-<li><input disabled="" type="checkbox"> Nat Kind inference w/o Kind annotation</li>
-<li><input disabled="" type="checkbox"> Array, Linear Type, Affine Type, etc.</li>
-<li><input disabled="" type="checkbox"> String, I/O</li>
+<li><input disabled="" type="checkbox"> Procedures with side-effects</li>
+<li><input disabled="" type="checkbox"> Dynamic arrays (mutable / growable arrays)</li>
+<li><input disabled="" type="checkbox"> Standard I/O</li>
+<li><input disabled="" type="checkbox"> File I/O</li>
+</ul>
+<h2 id="extra-mission-3---optimization"><a class="header" href="#extra-mission-3---optimization">Extra Mission 3 - Optimization</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> Unboxed arrays (for non-primitive types)</li>
+<li><input disabled="" type="checkbox"> Alias analysis and reuse analysis of heap memory.</li>
+<li><input disabled="" type="checkbox"> LLVM IR code generator.</li>
 </ul>
 <hr>
 <p>It’s a long, long journey…</p>
@@ -868,11 +935,11 @@ Hello, world! (Finally, we meet!)
 
         <script src="elasticlunr-ef4e11c1.min.js"></script>
         <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="searcher-09f2665d.js"></script>
 
         <script src="clipboard-1626706a.min.js"></script>
         <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
 

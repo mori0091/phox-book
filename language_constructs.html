@@ -15,8 +15,8 @@
         <link rel="icon" href="favicon-de23e50b.svg">
         <link rel="shortcut icon" href="favicon-8114d1fc.png">
         <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
         <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-17025f00.js";
+            window.path_to_searchindex_js = "searchindex-886cf50e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-be888c5d.js"></script>
+        <script src="toc-3e2bc6e3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -220,7 +220,11 @@
 <li><code>true</code>, <code>false</code> Boolean value literals</li>
 <li><code>0</code>,<code>100</code>, <code>-1</code> Integer value literals</li>
 <li><code>0u8</code>, <code>100u8</code>, <code>0xFFu8</code> 8-bit unsigned integer literals</li>
+<li><code>0u16</code>, <code>100u16</code>, <code>0xFFFFu16</code> 16-bit unsigned integer literals</li>
 <li><code>0u32</code>, <code>100u32</code>, <code>0xFFFFFFFFu32</code> 32-bit unsigned integer literals</li>
+<li><code>0u64</code>, <code>100u64</code>, <code>0xFFFFFFFFFFFFFFFFu64</code> 64-bit unsigned integer literals</li>
+<li><code>'A'</code>, <code>'\n'</code>, <code>'🎉'</code> Unicode Scalar Value literals</li>
+<li><code>"abc"</code>, <code>"🎉🤣👍🍺"</code> Unicode UTF-8 string literals</li>
 </ul>
 <h2 id="primitive-types"><a class="header" href="#primitive-types">Primitive types</a></h2>
 <ul>
@@ -228,7 +232,11 @@
 <li><code>Bool</code> Boolean type</li>
 <li><code>Int</code> Integer type</li>
 <li><code>u8</code> 8-bit unsigned integer type</li>
+<li><code>u16</code> 16-bit unsigned integer type</li>
 <li><code>u32</code> 32-bit unsigned integer type</li>
+<li><code>u64</code> 32-bit unsigned integer type</li>
+<li><code>ScalarValue</code> Unicode Scalar Value type</li>
+<li><code>ScalarString</code> Unicode UTF-8 string type (synonym of <code>Str ScalarValue</code>)</li>
 <li><code>@[t]</code> or <code>@[] t</code> Array type</li>
 <li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
 <li><code>@{x:t1, y:t2}</code> Record type</li>
@@ -255,7 +263,7 @@
 <p>In regular expression:<code>[*+\-/!$%&amp;=^?&lt;&gt;]+</code></p>
 </blockquote>
 <ul>
-<li><code>?&gt;</code>, <code>===</code>, <code>++</code></li>
+<li><code>?&gt;</code>, <code>===</code>, <code>&lt;+&gt;</code></li>
 </ul>
 <h3 id="operators-as-functions"><a class="header" href="#operators-as-functions">Operators as functions</a></h3>
 <ul>
@@ -366,6 +374,7 @@ add 2 + 3
 <ul>
 <li><code>_</code> Wildcard pattern</li>
 <li><code>()</code>, <code>true</code>, <code>0</code> Literal pattern</li>
+<li><code>'A'</code>, <code>'🎉'</code> Unicode Scalar Value literal pattern</li>
 <li><code>x</code>, <code>foo</code> Variable pattern</li>
 <li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
 <li><code>@[]</code>, <code>@[p1, p2]</code>, <code>@[p, ps..]</code>, <code>@[p, ..]</code>, <code>@[ps..]</code>, <code>@[..]</code> Array pattern</li>
@@ -385,7 +394,7 @@ add 2 + 3
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="design_notes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="typesys-future.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -399,7 +408,7 @@ add 2 + 3
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="design_notes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="typesys-future.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -421,11 +430,11 @@ add 2 + 3
 
         <script src="elasticlunr-ef4e11c1.min.js"></script>
         <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="searcher-09f2665d.js"></script>
 
         <script src="clipboard-1626706a.min.js"></script>
         <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
 

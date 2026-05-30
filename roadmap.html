@@ -15,8 +15,8 @@
         <link rel="icon" href="favicon-de23e50b.svg">
         <link rel="shortcut icon" href="favicon-8114d1fc.png">
         <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/general-0392ca55.css">
+        <link rel="stylesheet" href="css/chrome-fc474251.css">
         <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-17025f00.js";
+            window.path_to_searchindex_js = "searchindex-886cf50e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-be888c5d.js"></script>
+        <script src="toc-3e2bc6e3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -196,16 +196,22 @@
 <hr>
 <h2 id="extra-mission-1"><a class="header" href="#extra-mission-1">Extra Mission 1</a></h2>
 <ul>
-<li><input disabled="" type="checkbox"> Split/Merge record operators</li>
-<li><input disabled="" type="checkbox"> Row Kind / Row polymorphism</li>
-<li><input disabled="" type="checkbox"> Row Kind inference w/o Kind annotation</li>
+<li><input disabled="" type="checkbox" checked=""> Safe and Unsafe numeric conversion</li>
+<li><input disabled="" type="checkbox" checked=""> Array, String type</li>
+<li><input disabled="" type="checkbox" checked=""> Pretty-Printing Combinators</li>
 </ul>
-<h2 id="extra-mission-2"><a class="header" href="#extra-mission-2">Extra Mission 2</a></h2>
+<h2 id="extra-mission-2---proc-system"><a class="header" href="#extra-mission-2---proc-system">Extra Mission 2 - Proc system</a></h2>
 <ul>
-<li><input disabled="" type="checkbox"> Safe subset of Nat Kind</li>
-<li><input disabled="" type="checkbox"> Nat Kind inference w/o Kind annotation</li>
-<li><input disabled="" type="checkbox"> Array, Linear Type, Affine Type, etc.</li>
-<li><input disabled="" type="checkbox"> String, I/O</li>
+<li><input disabled="" type="checkbox"> Procedures with side-effects</li>
+<li><input disabled="" type="checkbox"> Dynamic arrays (mutable / growable arrays)</li>
+<li><input disabled="" type="checkbox"> Standard I/O</li>
+<li><input disabled="" type="checkbox"> File I/O</li>
+</ul>
+<h2 id="extra-mission-3---optimization"><a class="header" href="#extra-mission-3---optimization">Extra Mission 3 - Optimization</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> Unboxed arrays (for non-primitive types)</li>
+<li><input disabled="" type="checkbox"> Alias analysis and reuse analysis of heap memory.</li>
+<li><input disabled="" type="checkbox"> LLVM IR code generator.</li>
 </ul>
 <hr>
 <p>It’s a long, long journey…</p>
@@ -214,7 +220,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="design_notes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="typesys-future.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -228,7 +234,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="design_notes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="typesys-future.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
@@ -254,11 +260,11 @@
 
         <script src="elasticlunr-ef4e11c1.min.js"></script>
         <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="searcher-09f2665d.js"></script>
 
         <script src="clipboard-1626706a.min.js"></script>
         <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
 
