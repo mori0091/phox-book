@@ -18,16 +18,20 @@
 -------------------------------------------------------------------------------
 
 ## Extra Mission 1
-- [ ] Split/Merge record operators
-- [ ] Row Kind / Row polymorphism
-- [ ] Row Kind inference w/o Kind annotation
+- [x] Safe and Unsafe numeric conversion
+- [x] Array, String type
+- [x] Pretty-Printing Combinators
 
-## Extra Mission 2
-- [ ] Safe subset of Nat Kind
-- [ ] Nat Kind inference w/o Kind annotation
-- [ ] Array, Linear Type, Affine Type, etc.
-- [ ] String, I/O
+## Extra Mission 2 - Proc system
+- [ ] Procedures with side-effects
+- [ ] Dynamic arrays (mutable / growable arrays)
+- [ ] Standard I/O
+- [ ] File I/O
 
+## Extra Mission 3 - Optimization
+- [ ] Unboxed arrays (for non-primitive types)
+- [ ] Alias analysis and reuse analysis of heap memory.
+- [ ] LLVM IR code generator.
 
 -------------------------------------------------------------------------------
 

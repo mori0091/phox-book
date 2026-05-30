@@ -1,6 +1,12 @@
-# Design Notes
+# Phox Type System (Future)
 
-## Phox Type System (Future)
+> [!NOTE]
+> In this section, we will explore a vision for the Phox Type System that **was
+> technically feasible but was not adopted**. For reference...
+
+---
+
+## `Row` kind (Row polymorphism) and `Nat` kind (Type-level Natural numbers)
 
 | (kind)   | variable           | constraint solver           | constraint         | var-gen / union-find | constraint set                     |
 |----------|--------------------|-----------------------------|--------------------|----------------------|------------------------------------|

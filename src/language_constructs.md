@@ -30,14 +30,22 @@
 - `true`, `false` Boolean value literals
 - `0`,`100`, `-1` Integer value literals
 - `0u8`, `100u8`, `0xFFu8` 8-bit unsigned integer literals
+- `0u16`, `100u16`, `0xFFFFu16` 16-bit unsigned integer literals
 - `0u32`, `100u32`, `0xFFFFFFFFu32` 32-bit unsigned integer literals
+- `0u64`, `100u64`, `0xFFFFFFFFFFFFFFFFu64` 64-bit unsigned integer literals
+- `'A'`, `'\n'`, `'🎉'` Unicode Scalar Value literals
+- `"abc"`, `"🎉🤣👍🍺"` Unicode UTF-8 string literals
 
 ## Primitive types
 - `()` Unit type
 - `Bool` Boolean type
 - `Int` Integer type
 - `u8` 8-bit unsigned integer type
+- `u16` 16-bit unsigned integer type
 - `u32` 32-bit unsigned integer type
+- `u64` 32-bit unsigned integer type
+- `ScalarValue` Unicode Scalar Value type
+- `ScalarString` Unicode UTF-8 string type (synonym of `Str ScalarValue`)
 - `@[t]` or `@[] t` Array type
 - `(t,)`, `(t1, t2)` Tuple type
 - `@{x:t1, y:t2}` Record type
@@ -60,7 +68,7 @@
 
 ### User defined infix operators
 > In regular expression:`[*+\-/!$%&=^?<>]+`
-- `?>`, `===`, `++`
+- `?>`, `===`, `<+>`
 
 ### Operators as functions
 - `(==) 1 1`
@@ -160,6 +168,7 @@ add 2 + 3
 ## Patterns
 - `_` Wildcard pattern
 - `()`, `true`, `0` Literal pattern
+- `'A'`, `'🎉'` Unicode Scalar Value literal pattern
 - `x`, `foo` Variable pattern
 - `Nil`, `Cons p ps` Constructor pattern
 - `@[]`, `@[p1, p2]`, `@[p, ps..]`, `@[p, ..]`, `@[ps..]`, `@[..]` Array pattern

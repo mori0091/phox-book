@@ -47,8 +47,18 @@
 - [Standard Library]()
 
 ---
-[🎶 Design Notes](./design_notes.md)
+# 🎶 Design Notes
+- [Iterators, generators, and sink]()
+- [Arrays API]()
+- [Automatic Safety Mechanism Selection via Context-Sensitive Multi-Dispatch]()
+- [String: A Type-Level Unicode String Framework]()
+- [Pretty-Printing Combinators]()
+- [Safe type-familly: `type trait`/`type impl`]()
+- [Literals for string familly]()
+- [Phox Type System]()
+- [Phox Type System (Future)](./typesys-future.md)
 
+---
 [🧭 Roadmap](./roadmap.md)
 
 [🏁 Goal](./goal.md)

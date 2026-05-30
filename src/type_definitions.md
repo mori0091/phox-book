@@ -10,7 +10,7 @@ type Result e a = Ok a | Err e;
 - **Newtype shorthand** is available when:
   - There is only one variant, and
   - The type name and constructor name are the same, and
-  - The variant has exactly one tuple or one record argument.
+  - The variant has exactly one tuple, one record, or one array argument.
 
 ``` rust , ignore
 // Normal form
