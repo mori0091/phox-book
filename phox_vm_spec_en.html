@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>🧭 Roadmap - The Phox programming language</title>
+        <title>STReAM / Phox VM (formal semantics) - The Phox programming language</title>
 
 
         <!-- Custom HTML head -->
@@ -176,63 +176,366 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="-roadmap"><a class="header" href="#-roadmap">🧭 Roadmap</a></h1>
-<h2 id="-mission-1"><a class="header" href="#-mission-1">✔️ Mission 1</a></h2>
+                        <h1 id="stream-suspendable-term-reduction-abstract-machine-formal-semantics"><a class="header" href="#stream-suspendable-term-reduction-abstract-machine-formal-semantics">STReAM: Suspendable Term Reduction Abstract Machine (formal semantics)</a></h1>
 <ul>
-<li><input disabled="" type="checkbox" checked=""> Hindley-Milner type inference</li>
-<li><input disabled="" type="checkbox" checked=""> Safe subset of System Fω</li>
-<li><input disabled="" type="checkbox" checked=""> Algebraic Data Type (ADT)</li>
-</ul>
-<h2 id="-mission-2"><a class="header" href="#-mission-2">✔️ Mission 2</a></h2>
-<ul>
-<li><input disabled="" type="checkbox" checked=""> Traits a.k.a., Type Class</li>
-<li><input disabled="" type="checkbox" checked=""> Trait Record - Type Class as first-class record value</li>
-</ul>
-<h2 id="-mission-3"><a class="header" href="#-mission-3">✔️ Mission 3</a></h2>
-<ul>
-<li><input disabled="" type="checkbox" checked=""> Multi-Parameter Type Class (MPTC)</li>
-<li><input disabled="" type="checkbox" checked=""> Higher-order Trait Record - MPTC as first-class record value</li>
-<li><input disabled="" type="checkbox" checked=""> Overloaded Function Template</li>
-<li><input disabled="" type="checkbox" checked=""> Type and requires inference w/o type annotation</li>
+<li><strong>STReAM</strong> is <em>Suspendable Term Reduction Abstract Machine</em> designed for<br>strict functional programming languages.</li>
+<li><strong>Phox VM</strong> is an implementation of <em>STReAM</em> designed for<br>the <em>Phox</em> programming language.</li>
+<li><strong>Phox</strong> is a strict functional programming language.</li>
 </ul>
 <hr>
-<h2 id="extra-mission-1"><a class="header" href="#extra-mission-1">Extra Mission 1</a></h2>
+<h2 id="machine-state"><a class="header" href="#machine-state">Machine State</a></h2>
+<p>STReAM decomposes its state into <strong>three semantic scopes</strong>:</p>
 <ul>
-<li><input disabled="" type="checkbox" checked=""> Safe and Unsafe numeric conversion</li>
-<li><input disabled="" type="checkbox" checked=""> Array, String type</li>
-<li><input disabled="" type="checkbox" checked=""> Pretty-Printing Combinators</li>
-<li><input disabled="" type="checkbox"> Stream for Parser Combinators</li>
-<li><input disabled="" type="checkbox"> Parser Combinators</li>
-<li><input disabled="" type="checkbox"> Safe Type Family (<code>type trait</code>/<code>type impl</code>)</li>
-<li><input disabled="" type="checkbox"> String Family Literals</li>
+<li><strong>lexical scope</strong>    : the current term and its lexical environment</li>
+<li><strong>contextual scope</strong> : continuation code and continuation values</li>
+<li><strong>global scope</strong>     : global code table and heap</li>
 </ul>
-<h2 id="extra-mission-2---proc-system"><a class="header" href="#extra-mission-2---proc-system">Extra Mission 2 - Proc system</a></h2>
+<h3 id="formal-state"><a class="header" href="#formal-state">Formal State</a></h3>
+<blockquote>
+<p><strong>VM state</strong> = (<code>term</code>, <code>ctx.conts</code>, <code>ctx.env</code>, <code>g.codes</code>, <code>g.heap</code>)</p>
+</blockquote>
+<pre><code class="language-rust ignore">State {
+  // lexical scope
+  term : enum Term {
+    Val(Value),       // a value, or
+    Clo(Closure {     // a closure
+      code: Code,     // - code of the closure
+      env: Env,       // - variables bounded to the closure
+    }),
+  },
+  // contextual scope
+  ctx : Context {
+    conts: CStack,    // continuation closure-stack
+    env: Env,         // continuation value-stack
+  },
+  // global scope
+  g : {
+    codes: GlobalEnv, // global code table
+    heap: Heap,       // global store
+  },
+}</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>term</code> and <code>ctx</code> are <em>specific to each VM instance</em>, but<br><code>g</code> is <em>sharable among multiple VM instances</em>.</p>
+<p>In other words,</p>
 <ul>
-<li><input disabled="" type="checkbox"> Procedures with side-effects</li>
-<li><input disabled="" type="checkbox"> Dynamic arrays (mutable / growable arrays)</li>
-<li><input disabled="" type="checkbox"> Standard I/O</li>
-<li><input disabled="" type="checkbox"> File I/O</li>
-<li><input disabled="" type="checkbox"> Async-Computation and Async I/O combinators</li>
+<li>By their very nature, one VM instance can represent <em>one suspendable tasks or jobs</em>, and</li>
+<li>Multiple VM instances (i.e., multiple tasks/jobs) can run in concurrent,
+if the global allocator <code>g.heap</code> is multithread-safe,</li>
 </ul>
-<h2 id="extra-mission-3---optimization"><a class="header" href="#extra-mission-3---optimization">Extra Mission 3 - Optimization</a></h2>
-<ul>
-<li><input disabled="" type="checkbox"> Unboxed arrays (for non-primitive types)</li>
-<li><input disabled="" type="checkbox"> Object file, Link-Loader</li>
-<li><input disabled="" type="checkbox"> Alias analysis and reuse analysis of heap memory.</li>
-<li><input disabled="" type="checkbox"> LLVM IR code generator.</li>
-</ul>
+<p>Consequently, the STReAM/Phox VM can naturally support asynchronous and
+concurrent computation at the abstract machine and runtime system levels.</p>
+</blockquote>
 <hr>
-<p>It’s a long, long journey…</p>
+<h2 id="notations-of-vm-state"><a class="header" href="#notations-of-vm-state">Notations of VM state</a></h2>
+<ul>
+<li>
+<dl>
+<dt id="term"><a class="header" href="#term"><code>term</code></a></dt>
+<dd>Term. A Term is Closure or Value.</dd>
+</dl>
+<ul>
+<li><code>t</code> means an arbitrary Closure or Value.</li>
+<li><code>&lt;val&gt;</code> means an arbitrary Value.
+<ul>
+<li>
+<dl>
+<dt id="val"><a class="header" href="#val"><code>val</code></a></dt>
+<dd>Value</dd>
+</dl>
+<ul>
+<li>…</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>{code, env}</code> means a Closure. Closure is pair of Code <code>code</code> and Env <code>env</code>.
+<ul>
+<li>
+<dl>
+<dt id="code"><a class="header" href="#code"><code>code</code></a></dt>
+<dd>Code (Instruction)</dd>
+</dl>
+<ul>
+<li><code>Lit L</code> | <code>Var n</code> | <code>Lam E</code> | <code>App M N</code> | …</li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="env"><a class="header" href="#env"><code>env</code></a></dt>
+<dd>Environment stack (Env)</dd>
+</dl>
+<ul>
+<li><code>[]</code> means empty Env.</li>
+<li><code>es</code> means an arbitrary Env.</li>
+<li><code>a::es</code> means an Env whose top is <code>a</code>, where <code>a</code> is an address of heap</li>
+<li><code>es[n ↦ a]</code> means Env <code>es</code> whose element at de Bruijn index <code>n</code> is address <code>a</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="ctxconts"><a class="header" href="#ctxconts"><code>ctx.conts</code></a></dt>
+<dd>Continuation closure-stack (CStack)</dd>
+</dl>
+<ul>
+<li><code>[]</code> means empty CStack</li>
+<li><code>ks</code> means an arbitrary CStack.</li>
+<li><code>k::ks</code> means a CStack whose top is <code>k</code>, where <code>k</code> is a Closure.</li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="ctxenv"><a class="header" href="#ctxenv"><code>ctx.env</code></a></dt>
+<dd>continuation value-stack (WStack ≡ Env)</dd>
+</dl>
+<ul>
+<li><code>[]</code> means empty WStack</li>
+<li><code>ws</code> means an arbitrary WStack.</li>
+<li><code>a::ws</code> means a WStack whose top is <code>a</code>, where <code>a</code> is an address of heap</li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="gcodes"><a class="header" href="#gcodes"><code>g.codes</code></a></dt>
+<dd>Random access read-only code table. (GlobalEnv)</dd>
+</dl>
+<ul>
+<li><code>gs</code> means an arbitrary GloalEnv.</li>
+<li><code>gs[s ↦ c]</code> means GloalEnv <code>gs</code> whose element at key <code>s</code> is code <code>c</code></li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="gheap"><a class="header" href="#gheap"><code>g.heap</code></a></dt>
+<dd>Random access heap memory (Heap)</dd>
+</dl>
+<ul>
+<li><code>h</code> means an arbitrary Heap.</li>
+<li><code>h[a ↦ t]</code> means Heap <code>h</code> whose element at address <code>a</code> is term <code>t</code></li>
+<li><code>h[a ↦ {}]</code> means heap <code>h</code> whose element at address <code>a</code> is nil<br>(i.e. <code>a</code> is fresh address to be allocated later)</li>
+</ul>
+</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>h[a ↦ {}]</code> does <em>not</em> allocate memory.<br>It only denotes that <code>a</code> is a fresh address.<br>Actual allocation occurs when a value is written to <code>a</code>.</p>
+</blockquote>
+<hr>
+<h2 id="dynamics-of-vm-state-transition"><a class="header" href="#dynamics-of-vm-state-transition">Dynamics of VM state transition</a></h2>
+<ul>
+<li>WHNF (end of state transition)</li>
+<li>WHNF w/ continuation</li>
+<li>CSEQ (Continuation Sequencer)</li>
+<li>ACCESS (variable lookup)</li>
+<li>APP (function application)</li>
+<li>LET (let binding)</li>
+<li>LETREC (recursive binding)</li>
+</ul>
+<h3 id="whnf-end-of-state-transition"><a class="header" href="#whnf-end-of-state-transition">WHNF (end of state transition)</a></h3>
+<p>Evaluation halts when the current term was <code>{Lam E, es}</code> or <code>&lt;val&gt;</code> and there is no continuations.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">(Done)</td><td><code>{Lam E, es}</code></td><td><code>[]</code></td><td><code>[]</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">(Done)</td><td><code>&lt;val&gt;</code></td><td><code>[]</code></td><td><code>[]</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="whnf-w-continuation"><a class="header" href="#whnf-w-continuation">WHNF w/ continuation</a></h3>
+<p>Save the current term to the heap, push its address to <code>ctx.env</code>, and load the next continuation.</p>
+<ul>
+<li>Allocate fresh address <code>a</code> of heap for the current term,</li>
+<li>Push <code>a</code> to <code>ctx.env</code>,</li>
+<li>Pop continuation from <code>ctx.conts</code>.</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">cont</td><td><code>{Lam E, es}</code></td><td><code>k::ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[a ↦ {}]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>k</code></td><td><code>ks</code></td><td><code>a::ws</code></td><td><code>gs</code></td><td><code>h[a ↦ {Lam E, es}]</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">cont</td><td><code>&lt;val&gt;</code></td><td><code>k::ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[a ↦ {}]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>k</code></td><td><code>ks</code></td><td><code>a::ws</code></td><td><code>gs</code></td><td><code>h[a ↦ &lt;val&gt;]</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="cseq-continuation-sequencer"><a class="header" href="#cseq-continuation-sequencer">CSEQ (Continuation Sequencer)</a></h3>
+<ul>
+<li>
+<dl>
+<dt id="cseq-m-n"><a class="header" href="#cseq-m-n"><code>CSeq M N</code></a></dt>
+<dd>Evaluate <code>M</code>, and then <code>N</code>.<br>Since <code>N</code> is evaluated after <code>M</code>,<br><code>N</code> is pushed onto the continuation stack as a closure, and<br>the current code is replaced with <code>M</code>.</dd>
+</dl>
+</li>
+<li>
+<p>Push continuation code <code>N</code> (as closure <code>{N, es}</code>) to <code>ctx.conts</code>,</p>
+</li>
+<li>
+<p>Replace the current code with <code>M</code>.</p>
+</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">cseq</td><td><code>{CSeq M N, es}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>{M, es}</code></td><td><code>{N, es}::ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="access-variable-lookup"><a class="header" href="#access-variable-lookup">ACCESS (variable lookup)</a></h3>
+<ul>
+<li>
+<dl>
+<dt id="var-n"><a class="header" href="#var-n"><code>Var n</code></a></dt>
+<dd>Load term of a variable bounded the current env.</dd>
+</dl>
+</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">access</td><td><code>{Var n, es[n ↦ a]}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[a ↦ t]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>t</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[a ↦ t]</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>If de Bruijn index <code>n</code> was out of bounds, causes run-time error “variable not found”.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">(Error)</td><td><code>{Var n, es[n ↦ {}]}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="app-function-application"><a class="header" href="#app-function-application">APP (function application)</a></h3>
+<ul>
+<li>
+<dl>
+<dt id="app-m-n"><a class="header" href="#app-m-n"><code>App M N</code></a></dt>
+<dd>Evaluate <code>M</code> and <code>N</code> in order, then apply the resulting function to the
+argument via <code>KApp</code>.</dd>
+</dl>
+</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">app</td><td><code>{App M N, es}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>{N, es}</code></td><td><code>{M, es}::{KApp, []}::ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">kapp</td><td><code>{KApp, []}</code></td><td><code>ks</code></td><td><code>f::x::ws</code></td><td><code>gs</code></td><td><code>h[f ↦ {Lam E, es}, x ↦ tN]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>{E, x::es}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[x ↦ tN]</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>where:</p>
+<ul>
+<li><code>{Lam E, es}</code> = resulting term (WHNF) of <code>{M, es}</code> via <code>cont</code> transition</li>
+<li><code>tN</code> = resulting term (WHNF) of <code>{N, es}</code> via <code>cont</code> transition</li>
+</ul>
+<h3 id="let-let-binding"><a class="header" href="#let-let-binding">LET (let binding)</a></h3>
+<p>The code <code>Let X E</code> is synonym of <code>App (Lam E) X</code>.</p>
+<h3 id="letrec-recursive-binding"><a class="header" href="#letrec-recursive-binding">LETREC (recursive binding)</a></h3>
+<ul>
+<li>
+<dl>
+<dt id="letrec-x-e"><a class="header" href="#letrec-x-e"><code>LetRec X E</code></a></dt>
+<dd>Allocate a dummy for recursive binding, evaluate <code>X</code>, then update the dummy
+with the result and evaluate <code>E</code>.</dd>
+</dl>
+</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">letrec</td><td><code>{LetRec X E, es}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[f ↦ {}]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>{X, f::es}</code></td><td><code>{KLetRec E, f::es}::ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[f ↦ dummy]</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">(rule)</th><th>term</th><th>ctx.conts</th><th>ctx.env</th><th>g.codes</th><th>g.heap</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">kletrec</td><td><code>{KLetRec E, f::es}</code></td><td><code>ks</code></td><td><code>x::ws</code></td><td><code>gs</code></td><td><code>h[x ↦ tX, f ↦ dummy]</code></td></tr>
+<tr><td style="text-align: left">→</td><td><code>{E, f::es}</code></td><td><code>ks</code></td><td><code>ws</code></td><td><code>gs</code></td><td><code>h[f ↦ tX]</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>where:</p>
+<ul>
+<li><code>dummy</code> = an arabitrary <em>allocated</em> dummy term.</li>
+<li><code>f</code> = an address that
+<ul>
+<li>holds <code>dummy</code> at first via <code>letrec</code> transition, and then</li>
+<li>be updated with term at <code>x</code> later via <code>kletrec</code> transition.</li>
+<li>finally <code>f</code> holds <code>tX</code> (the recursive function body).</li>
+</ul>
+</li>
+<li><code>tX</code> = resulting term (WHNF) of <code>{X, f::es}</code> via <code>cont</code> transition</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="phox_vm_spec_en.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="phox_vm_en.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="goal.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="roadmap.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -242,11 +545,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="phox_vm_spec_en.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="phox_vm_en.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="goal.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="roadmap.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
