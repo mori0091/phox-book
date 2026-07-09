@@ -56,7 +56,9 @@
 - [Safe type-familly: `type trait`/`type impl`]()
 - [Literals for string familly]()
 - [Phox Type System]()
-- [Phox Type System (Future)](./typesys-future.md)
+- [STReAM / Phox VM (overview)](./phox_vm_en.md)
+- [STReAM / Phox VM (formal semantics)](./phox_vm_spec_en.md)
+<!-- - [Phox Type System (Future)](./typesys-future.md) -->
 
 ---
 [🧭 Roadmap](./roadmap.md)
