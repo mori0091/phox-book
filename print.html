@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a23c17c.js";
+            window.path_to_searchindex_js = "searchindex-058c4906.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-ffef8c23.js"></script>
+        <script src="toc-8f4cfda8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -663,6 +663,243 @@ add 2 + 3
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="wip-async-computation-and-async-io"><a class="header" href="#wip-async-computation-and-async-io">[WIP] Async-Computation and Async I/O</a></h1>
+<p>An asynchronous <em>task</em> ≒ <em>VM instance</em>.<br>(The Phox VM itself is a state-machine based on <em>Suspendable Term Reduction Abstract Machine (STReAM)</em>)</p>
+<p>An asynchronous task is executed by a dedicated VM instance.<br>Each VM instance is a single-threaded execution context.<br>Multiple VM instances may be executed in concurrent by dedicated threads.<br>(depends on scheduler implementations)</p>
+<hr>
+<h2 id="async-apis-and-semantics"><a class="header" href="#async-apis-and-semantics">Async-APIs and semantics</a></h2>
+<ul>
+<li>
+<dl>
+<dt id="task--a---task-a"><a class="header" href="#task--a---task-a"><code>task : a -&gt; Task a</code></a></dt>
+<dd><code>task e</code>
+<ul>
+<li><code>task e</code> constructs a task abstraction of type <code>Task a</code>, that wraps the expression <code>e</code>.</li>
+<li>The expression <code>e</code> of type <code>a</code> is not evaluated immediatelly.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt id="schedule--sc---task-a---jobhandle-a"><a class="header" href="#schedule--sc---task-a---jobhandle-a"><code>schedule : sc -&gt; Task a -&gt; JobHandle a</code></a></dt>
+<dd><code>schedule sc t</code>
+<ul>
+<li><code>schedule sc t</code> schedules task <code>t</code> to scheduler <code>sc</code>.
+<ul>
+<li>That constructs a <em>dedicated VM instance</em> for the task <code>t</code>, and</li>
+<li>returns corresponding <code>job</code>-handle of type <code>JobHandle a</code>.</li>
+</ul>
+</li>
+<li>The <code>job</code> is registered to the scheduler’s runnable-queue, then
+<ul>
+<li>an executor will be assigned to a runnable <code>job</code>, and</li>
+<li>the executor executes (start/resume) the corresponding <em>VM instance</em>.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt id="await--jobhandle-a---result-error-a"><a class="header" href="#await--jobhandle-a---result-error-a"><code>await : JobHandle a -&gt; Result Error a</code></a></dt>
+<dd><code>await job</code>
+<ul>
+<li>If the <code>job</code> has already finished, returns <code>Ok val</code> where <code>val</code> is its resulting value of type <code>a</code>.</li>
+<li>If the <code>job</code> has already canceled, returns <code>Err err</code>.</li>
+<li>Otherwise,
+<ul>
+<li>registers the current job to wait-queue of the <code>job</code>,</li>
+<li>and suspend the current job.</li>
+</ul>
+</li>
+<li>When a job is finished,
+<ul>
+<li><code>Ok val</code> is passed to all jobs waiting in its wait-queue,</li>
+<li>and awake them. (i.e. schedule them again)</li>
+<li>the wait-queue shall be cleared.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt id="cancel--jobhandle-a---"><a class="header" href="#cancel--jobhandle-a---"><code>cancel : JobHandle a -&gt; ()</code></a></dt>
+<dd><code>cancel job</code>
+<ul>
+<li>If the <code>job</code> has already finished or canceled, returns <code>()</code>.</li>
+<li>Otherwise,
+<ul>
+<li>mark the <code>job</code> as <em>canceled</em>, then</li>
+<li><code>Err err</code> is pased to all jobs waiting in its wait-queue,</li>
+<li>and awake them. (i.e. schedule them again)</li>
+<li>the wait-queue shall be cleared.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<ul>
+<li><code>task</code>/<code>schedule</code>/<code>await</code>/<code>cancel</code> control the evaluation strategy and order of expressions.</li>
+<li><code>task</code>/<code>schedule</code>/<code>await</code>/<code>cancel</code> themselves are <em>not</em> “operations with side effects.”</li>
+<li>Asynchronous I/O would be implemented using the proc-system, such as <code>task (proc! {...})</code>.</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="rough-sketch"><a class="header" href="#rough-sketch">rough sketch</a></h2>
+<pre><code class="language-phox">trait Cancel h a {
+    cancel : h a -&gt; ();
+};
+
+trait Await h a {
+    await : h a -&gt; a;
+};
+
+trait TryAwait h a {
+    await : h a -&gt; Result Error a;
+};
+
+trait Schedule sc a {
+    schedule : sc -&gt; Task a -&gt; JobHandle a;
+};
+
+// -------------------------------------------------------------
+impl Cancel JobHandle a {
+    cancel = __cancel_job__;
+};
+
+impl TryAwait JobHandle a {
+    await = __try_await_job__;
+};
+impl Await JobHandle a {
+    await = \job. match (@{TryAwait JobHandle a}.await job) {
+        Ok x =&gt; x,
+        // _ =&gt; /* runtime error */
+    };
+};
+
+type DefaultScheduler = @{ /* ... */ };
+
+impl Schedule DefaultScheduler a {
+    schedule = __schedule_job__;
+};
+
+let _DEFAULT_SCHEDULER_ = DefaultScheduler @{ /* ... */ };
+
+*let async = scheduler _DEFAULTSCHEDULER_ &lt;&lt; task;
+// `await (async e) |&gt; (\Ok x. x)`   // =&gt; `@{TryAwait h a}.await` is performed
+// `await (async e) |&gt; (\x. x + 1)`  // =&gt; `@{Await h Int}.await` is performed
+
+</code></pre>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// === Representation of Job in runtime-system. ===
+type JobHandle = Rc&lt;RefCell&lt;Job&gt;&gt;;
+enum Job {
+    Canceled,        // =&gt; Err err
+    Done(vm::Term),  // =&gt; Ok val
+    InProgress {
+        state: vm::State,
+        waiters: Vec&lt;JobHandle&gt;,
+    },
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="wip-proc-system-a-separate-world-for-controlled-mutation"><a class="header" href="#wip-proc-system-a-separate-world-for-controlled-mutation">[WIP] Proc System: A Separate World for Controlled Mutation</a></h1>
+<p>Phox separates <em>pure</em> and <em>procedural</em> worlds at the type and syntax level.</p>
+<hr>
+<h2 id="procedural-types"><a class="header" href="#procedural-types">Procedural types</a></h2>
+<p>Procedural types (<code>@![a]</code>, <code>Slice!</code>, <code>Ptr!</code>, …) represent <em>mutable</em> data structures used only inside procedural blocks.</p>
+<ul>
+<li><strong>cannot escape</strong> into the pure world</li>
+<li>pure functions <strong>cannot observe</strong> or depend on them</li>
+<li>they exist only as <em>temporary mutable views</em> created via <code>thaw!</code></li>
+<li>they must be converted back to pure values via <code>freeze!</code></li>
+</ul>
+<p>Procedural types are always local to a single VM instance and never shared.</p>
+<pre><code class="language-phox">proc! {
+    let xs! = thaw!(xs);     // @[a] → @![a]
+    do_inplace_operation!(xs!);
+    freeze!(xs!)             // @![a] → @[a]
+}
+</code></pre>
+<hr>
+<h2 id="user-defined-procedures"><a class="header" href="#user-defined-procedures">User-defined procedures</a></h2>
+<pre><code class="language-phox">// Define procedures
+// - Procedure name must end with `!`
+// - Procedures are **uncurried**
+// - `proc(args..) {...}` is **procedure abstraction**
+*let foo! = proc(x) {...};
+*let bar! = proc(x,y) {...};
+
+// Procedure call (only allowed inside `proc! { ... }`)
+proc! {
+  foo!(1);
+  bar!(2,3);
+  ()  // `proc! {...}` must return a **pure** value
+};
+</code></pre>
+<hr>
+<h2 id="resource-types"><a class="header" href="#resource-types">Resource types</a></h2>
+<p>Resource types represent <em>opaque handles</em> to external OS resources.</p>
+<ul>
+<li><strong>can escape</strong> into the pure world</li>
+<li>pure functions <strong>cannot observe</strong> or pattern-match them</li>
+<li>operations on resource values are allowed <strong>only in proc world</strong></li>
+<li>each resource type defines a destructor <code>drop!</code></li>
+<li><code>drop!</code> is called automatically when the reference count becomes zero</li>
+<li><code>drop!</code> cannot be called explicitly</li>
+</ul>
+<p>Resource values may be shared within a single VM instance without mutual exclusion,<br>because procedural types never escape and pure values are immutable.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Resource types are <strong>builtin</strong> and provided only by the runtime system.<br>Users <strong>cannot</strong> define new resource types.</p>
+<pre><code class="language-phox">// ----
+// The following `resource ... drop! ...` syntax is **illustrative only**
+// and does not exist in the actual language:
+// ----
+// Define resource type.
+// - Resource name must end with `!`
+// - Resource type has exactly one constructor of the same name
+// - Resource type has exactly one destructor `drop!`
+// - `drop!` is called automatically when Rc becomes 0
+// - Construction and pattern match are allowed only in proc world
+resource MyResource! a = @[a]
+drop! = proc(MyResource! xs) {
+  ...
+};
+</code></pre>
+</blockquote>
+<hr>
+<h2 id="concurrency-and-vm-instances"><a class="header" href="#concurrency-and-vm-instances">Concurrency and VM instances</a></h2>
+<p>Each VM instance is a single-threaded execution context.</p>
+<ul>
+<li>procedural types never escape → <strong>no shared mutable state</strong></li>
+<li>pure values are immutable → <strong>safe to share</strong></li>
+<li>resource values are opaque → <strong>safe to share as long as operations are restricted to proc world</strong></li>
+</ul>
+<p><strong>Only the <code>await</code> operation can transfer resource values between VM instances.</strong></p>
+<p>This means:</p>
+<ul>
+<li>resource sharing/movement happens <em>only</em> at <code>await</code> boundaries</li>
+<li>mutual exclusion is required <em>only</em> for resource operations that cross VM boundaries</li>
+<li>no mutual exclusion is needed inside a single VM instance</li>
+</ul>
+<p>If the job’s return value does not contain a resource value,<br>there is no limit on the number of waiters.</p>
+<p>Otherwise, Phox limits the number of waiters for a <code>JobHandle a</code> to <code>1</code> at most.<br>In this case, <code>await job</code> consumes the resource returned by <code>job</code> (ownership
+transfer), and any subsequent calls to <code>await job</code> will result in an error.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Resource operations may interact with external OS resources.<br>External resources are not pure and may cause race conditions.<br>Phox guarantees safety inside the VM, but external resource conflicts<br>must be handled by appropriate OS-level APIs (e.g., file locks).</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="stream-suspendable-term-reduction-abstract-machine-overview"><a class="header" href="#stream-suspendable-term-reduction-abstract-machine-overview"><strong>STReAM: Suspendable Term Reduction Abstract Machine (overview)</strong></a></h1>

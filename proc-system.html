@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Language constructs - The Phox programming language</title>
+        <title>Proc System: A Separate World for Controlled Mutation - The Phox programming language</title>
 
 
         <!-- Custom HTML head -->
@@ -176,227 +176,103 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="language-constructs"><a class="header" href="#language-constructs">Language constructs</a></h1>
-<h2 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h2>
-<h3 id="variables-and-type-variables"><a class="header" href="#variables-and-type-variables">Variables and type variables</a></h3>
-<blockquote>
-<p>In regular expression:<code>[a-z_]([-]*[a-zA-Z0-9_]+)*['?]*</code></p>
-</blockquote>
+                        <h1 id="wip-proc-system-a-separate-world-for-controlled-mutation"><a class="header" href="#wip-proc-system-a-separate-world-for-controlled-mutation">[WIP] Proc System: A Separate World for Controlled Mutation</a></h1>
+<p>Phox separates <em>pure</em> and <em>procedural</em> worlds at the type and syntax level.</p>
+<hr>
+<h2 id="procedural-types"><a class="header" href="#procedural-types">Procedural types</a></h2>
+<p>Procedural types (<code>@![a]</code>, <code>Slice!</code>, <code>Ptr!</code>, …) represent <em>mutable</em> data structures used only inside procedural blocks.</p>
 <ul>
-<li><code>seq</code>, <code>x'</code>, <code>some?</code>, <code>foo-bar</code></li>
-<li><code>fooBar</code>, <code>a0</code>, <code>take_while</code></li>
+<li><strong>cannot escape</strong> into the pure world</li>
+<li>pure functions <strong>cannot observe</strong> or depend on them</li>
+<li>they exist only as <em>temporary mutable views</em> created via <code>thaw!</code></li>
+<li>they must be converted back to pure values via <code>freeze!</code></li>
 </ul>
-<h3 id="constructor-type-constructor-and-trait-names"><a class="header" href="#constructor-type-constructor-and-trait-names">Constructor, type constructor, and trait names</a></h3>
-<blockquote>
-<p>In regular expression:<code>[A-Z][a-zA-Z0-9_]*</code></p>
-</blockquote>
-<ul>
-<li><code>List</code>, <code>Nil</code>, <code>Eq</code>, <code>Iter</code></li>
-</ul>
-<h3 id="module-names"><a class="header" href="#module-names">Module names</a></h3>
-<blockquote>
-<p>In regular expression:<code>[a-z_]([-]*[a-zA-Z0-9_]+)*</code></p>
-</blockquote>
-<ul>
-<li><code>core</code>, <code>cmp</code>, <code>iter</code></li>
-</ul>
-<h3 id="module-path-qualified-module-names"><a class="header" href="#module-path-qualified-module-names">Module path (qualified module names)</a></h3>
-<blockquote>
-<p>A sequence of module names separated by <code>::</code></p>
-</blockquote>
-<ul>
-<li><code>::core::cmp</code>, <code>::core::list</code> Absolute path</li>
-<li><code>cmp</code>, <code>list</code>, <code>foo::bar</code> Relative path</li>
-</ul>
-<h3 id="qualified-names"><a class="header" href="#qualified-names">Qualified names</a></h3>
-<blockquote>
-<p>A module path followed by a variable, constructor, type constructor, or trait name</p>
-</blockquote>
-<ul>
-<li><code>::core::iter::seq</code>, <code>::core::iter::Seq</code>, <code>::core::iter::Iter</code></li>
-<li><code>iter::seq</code>, <code>iter::Seq</code>, <code>iter::Iter</code></li>
-</ul>
-<h2 id="literals"><a class="header" href="#literals">Literals</a></h2>
-<ul>
-<li><code>()</code> Unit value literal</li>
-<li><code>true</code>, <code>false</code> Boolean value literals</li>
-<li><code>0</code>,<code>100</code>, <code>-1</code> Integer value literals</li>
-<li><code>0u8</code>, <code>100u8</code>, <code>0xFFu8</code> 8-bit unsigned integer literals</li>
-<li><code>0u16</code>, <code>100u16</code>, <code>0xFFFFu16</code> 16-bit unsigned integer literals</li>
-<li><code>0u32</code>, <code>100u32</code>, <code>0xFFFFFFFFu32</code> 32-bit unsigned integer literals</li>
-<li><code>0u64</code>, <code>100u64</code>, <code>0xFFFFFFFFFFFFFFFFu64</code> 64-bit unsigned integer literals</li>
-<li><code>'A'</code>, <code>'\n'</code>, <code>'🎉'</code> Unicode Scalar Value literals</li>
-<li><code>"abc"</code>, <code>"🎉🤣👍🍺"</code> Unicode UTF-8 string literals</li>
-</ul>
-<h2 id="primitive-types"><a class="header" href="#primitive-types">Primitive types</a></h2>
-<ul>
-<li><code>()</code> Unit type</li>
-<li><code>Bool</code> Boolean type</li>
-<li><code>Int</code> Integer type</li>
-<li><code>u8</code> 8-bit unsigned integer type</li>
-<li><code>u16</code> 16-bit unsigned integer type</li>
-<li><code>u32</code> 32-bit unsigned integer type</li>
-<li><code>u64</code> 32-bit unsigned integer type</li>
-<li><code>ScalarValue</code> Unicode Scalar Value type</li>
-<li><code>ScalarString</code> Unicode UTF-8 string type (synonym of <code>Str ScalarValue</code>)</li>
-<li><code>@[t]</code> or <code>@[] t</code> Array type</li>
-<li><code>(t,)</code>, <code>(t1, t2)</code> Tuple type</li>
-<li><code>@{x:t1, y:t2}</code> Record type</li>
-<li><code>t1 -&gt; t2</code> Function type</li>
-<li><code>T t</code>, <code>t1 t2</code> Type-level function application</li>
-</ul>
-<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<h3 id="infix-binary-operators"><a class="header" href="#infix-binary-operators">Infix (binary) operators</a></h3>
-<ul>
-<li><code>==</code>, <code>!=</code> Equality / Non-equality operators</li>
-<li><code>&lt;=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&gt;=</code> Comparison operators</li>
-<li><code>&amp;&amp;</code>, <code>||</code> Logical operators</li>
-<li><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code> Arithmetic operators</li>
-<li><code>|&gt;</code>, <code>&lt;|</code> Pipeline operators</li>
-<li><code>&gt;&gt;</code>, <code>&lt;&lt;</code> Function composition operators</li>
-</ul>
-<h3 id="prefix-operators"><a class="header" href="#prefix-operators">Prefix operators</a></h3>
-<ul>
-<li><code>nagete</code>, <code>-</code> Arithmetic negation</li>
-<li><code>not</code>, <code>!</code> Boolean not</li>
-</ul>
-<h3 id="user-defined-infix-operators"><a class="header" href="#user-defined-infix-operators">User defined infix operators</a></h3>
-<blockquote>
-<p>In regular expression:<code>[*+\-/!$%&amp;=^?&lt;&gt;]+</code></p>
-</blockquote>
-<ul>
-<li><code>?&gt;</code>, <code>===</code>, <code>&lt;+&gt;</code></li>
-</ul>
-<h3 id="operators-as-functions"><a class="header" href="#operators-as-functions">Operators as functions</a></h3>
-<ul>
-<li><code>(==) 1 1</code></li>
-<li><code>(+) 1 2</code></li>
-</ul>
-<h3 id="functions-and-constructors-as-operators"><a class="header" href="#functions-and-constructors-as-operators">Functions and constructors as operators</a></h3>
-<ul>
-<li><code>1 `Cons` Nil</code></li>
-<li><code>x `@{Eq Int}.(==)` y</code></li>
-</ul>
-<h2 id="declarations"><a class="header" href="#declarations">Declarations</a></h2>
-<p>At the top level of a module:</p>
-<ul>
-<li><code>mod</code> Define sub-module</li>
-<li><code>use</code> Import identifiers</li>
-<li><code>type</code> Define Algebraic Data Type (ADT)</li>
-<li><code>trait</code> Define Multi-Parameter Type Class (MPTC)</li>
-<li><code>impl</code> Define MPTC instance implementation</li>
-<li><code>*let</code> Define generic/overloaded function template</li>
-<li><code>let</code> Define a variable or function</li>
-<li><code>let rec</code> Define a recursive function</li>
-</ul>
-<h2 id="statements"><a class="header" href="#statements">Statements</a></h2>
-<p>Within a local scope:</p>
-<ul>
-<li><code>let</code> Variable / function binding</li>
-<li><code>let rec</code> Recursive function binding</li>
-</ul>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>In the case of <code>let rec p = e;</code>,</p>
-<ul>
-<li><code>p</code> must be a variable pattern.</li>
-</ul>
-<p>In the case of <code>let p = e;</code>,</p>
-<ul>
-<li>At the top level of a module, <code>p</code> must be a variable pattern.</li>
-<li>Within a local scope, any pattern can be used for <code>p</code>.</li>
-</ul>
-</blockquote>
-<h2 id="expressions"><a class="header" href="#expressions">Expressions</a></h2>
-<h3 id="value-expressions"><a class="header" href="#value-expressions">Value expressions</a></h3>
-<blockquote>
-<p>(evaluate to themselves; safe to generalize)</p>
-</blockquote>
-<ul>
-<li><code>()</code>, <code>true</code>, <code>0</code> Literals</li>
-<li><code>λp.e</code>/<code>\p.e</code> Lambda abstraction (function)</li>
-<li><code>@[]</code>, <code>@[e1]</code>, <code>@[e1, e2]</code> Array value</li>
-<li><code>(e1,)</code>, <code>(e1, e2)</code> Tuple value</li>
-<li><code>@{x = e1, y = e2}</code> Record value</li>
-<li><code>@{T t1 t2}</code> Trait record value</li>
-<li><code>|(e op)</code>/<code>|(e op _)</code> Infix-operator partial application (bind the 1st argument)</li>
-<li><code>|(op e)</code>/<code>|(_ op e)</code> Infix-operator partial application (bind the 2nd argument)</li>
-</ul>
-<blockquote>
-<p>Infix-operator partial applications (a.k.a. section syntax) are desugared into lambda abstraction.</p>
-</blockquote>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Old section syntax <code>#(e op)</code>/<code>#(e op _)</code> and <code>#(op e)</code>/<code>#(_ op e)</code> are deprecated.<br>Use new syntax <code>|(e op)</code>/<code>|(e op _)</code> and <code>|(op e)</code>/<code>|(_ op e)</code> instead.</p>
-</blockquote>
-<blockquote class="blockquote-tag blockquote-tag-important">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>Old record value syntax <code>@{x: e1, y: e2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = e1, y = e2}</code> instead.</p>
-</blockquote>
-<h3 id="non-value-expressions"><a class="header" href="#non-value-expressions">Non-value expressions</a></h3>
-<blockquote>
-<p>(require evaluation; not eligible for generalization)</p>
-</blockquote>
-<ul>
-<li><code>x</code> Evaluate variable</li>
-<li><code>e1 e2</code> Function application</li>
-<li><code>e1[e2]</code> Array index access</li>
-<li><code>e.0</code> Tuple index access</li>
-<li><code>e.x</code> Record field access</li>
-<li><code>{ stmt1; stmt2; expr }</code> Block expression (evaluates to the last expression; introduces a new scope)</li>
-<li><code>if (e1) e2 else e3</code> If then else</li>
-<li><code>match (e) { p1 =&gt; e1, .. }</code> Pattern matching</li>
-</ul>
-<h2 id="minumul-type-annotaions"><a class="header" href="#minumul-type-annotaions">Minumul Type Annotaions</a></h2>
-<ul>
-<li>
-<p><code>e: t</code> Optional type annotations for <strong>expressions</strong><br>This adds a <strong>type equality constraint</strong> between the inferred type of <code>e</code> and the annotated type <code>t</code>.<br>This helps type inference and the constraint solver resolve the last mile of ambiguity.</p>
-</li>
-<li>
-<p>Type annotations as <strong>signatures</strong> are required only in <code>trait</code> declarations.<br>Other bindings (such as <code>let</code> and lambda parameters) do not accept type signatures.</p>
-</li>
-</ul>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The <code>expr: t</code> syntax is only permitted for <strong>atomic</strong> expressions.<br>If you need to type-annotate a complex expression,<br>enclose the expression in parentheses and follow it with the type annotation.</p>
-</blockquote>
-<h3 id="examples"><a class="header" href="#examples">Examples:</a></h3>
-<pre><code>let add = \a.\b. (a + b): Int;
+<p>Procedural types are always local to a single VM instance and never shared.</p>
+<pre><code class="language-phox">proc! {
+    let xs! = thaw!(xs);     // @[a] → @![a]
+    do_inplace_operation!(xs!);
+    freeze!(xs!)             // @![a] → @[a]
+}
+</code></pre>
+<hr>
+<h2 id="user-defined-procedures"><a class="header" href="#user-defined-procedures">User-defined procedures</a></h2>
+<pre><code class="language-phox">// Define procedures
+// - Procedure name must end with `!`
+// - Procedures are **uncurried**
+// - `proc(args..) {...}` is **procedure abstraction**
+*let foo! = proc(x) {...};
+*let bar! = proc(x,y) {...};
 
-add 2 + 3
-// =&gt; 5: Int
+// Procedure call (only allowed inside `proc! { ... }`)
+proc! {
+  foo!(1);
+  bar!(2,3);
+  ()  // `proc! {...}` must return a **pure** value
+};
 </code></pre>
-<pre><code>(cast 10): u8
-// =&gt; 10: u8
-</code></pre>
-<pre><code>(cast 10): (Result e u8)
-// =&gt; Ok 10: Result RuntimeError u8
-</code></pre>
-<h2 id="patterns"><a class="header" href="#patterns">Patterns</a></h2>
+<hr>
+<h2 id="resource-types"><a class="header" href="#resource-types">Resource types</a></h2>
+<p>Resource types represent <em>opaque handles</em> to external OS resources.</p>
 <ul>
-<li><code>_</code> Wildcard pattern</li>
-<li><code>()</code>, <code>true</code>, <code>0</code> Literal pattern</li>
-<li><code>'A'</code>, <code>'🎉'</code> Unicode Scalar Value literal pattern</li>
-<li><code>x</code>, <code>foo</code> Variable pattern</li>
-<li><code>Nil</code>, <code>Cons p ps</code> Constructor pattern</li>
-<li><code>@[]</code>, <code>@[p1, p2]</code>, <code>@[p, ps..]</code>, <code>@[p, ..]</code>, <code>@[ps..]</code>, <code>@[..]</code> Array pattern</li>
-<li><code>(p1,)</code>, <code>(p1, p2)</code> Tuple pattern</li>
-<li><code>@{x = p1, y = p2}</code>, <code>@{x, y}</code> Record pattern</li>
+<li><strong>can escape</strong> into the pure world</li>
+<li>pure functions <strong>cannot observe</strong> or pattern-match them</li>
+<li>operations on resource values are allowed <strong>only in proc world</strong></li>
+<li>each resource type defines a destructor <code>drop!</code></li>
+<li><code>drop!</code> is called automatically when the reference count becomes zero</li>
+<li><code>drop!</code> cannot be called explicitly</li>
 </ul>
-<blockquote class="blockquote-tag blockquote-tag-important">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
+<p>Resource values may be shared within a single VM instance without mutual exclusion,<br>because procedural types never escape and pure values are immutable.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Resource types are <strong>builtin</strong> and provided only by the runtime system.<br>Users <strong>cannot</strong> define new resource types.</p>
+<pre><code class="language-phox">// ----
+// The following `resource ... drop! ...` syntax is **illustrative only**
+// and does not exist in the actual language:
+// ----
+// Define resource type.
+// - Resource name must end with `!`
+// - Resource type has exactly one constructor of the same name
+// - Resource type has exactly one destructor `drop!`
+// - `drop!` is called automatically when Rc becomes 0
+// - Construction and pattern match are allowed only in proc world
+resource MyResource! a = @[a]
+drop! = proc(MyResource! xs) {
+  ...
+};
+</code></pre>
+</blockquote>
+<hr>
+<h2 id="concurrency-and-vm-instances"><a class="header" href="#concurrency-and-vm-instances">Concurrency and VM instances</a></h2>
+<p>Each VM instance is a single-threaded execution context.</p>
+<ul>
+<li>procedural types never escape → <strong>no shared mutable state</strong></li>
+<li>pure values are immutable → <strong>safe to share</strong></li>
+<li>resource values are opaque → <strong>safe to share as long as operations are restricted to proc world</strong></li>
+</ul>
+<p><strong>Only the <code>await</code> operation can transfer resource values between VM instances.</strong></p>
+<p>This means:</p>
+<ul>
+<li>resource sharing/movement happens <em>only</em> at <code>await</code> boundaries</li>
+<li>mutual exclusion is required <em>only</em> for resource operations that cross VM boundaries</li>
+<li>no mutual exclusion is needed inside a single VM instance</li>
+</ul>
+<p>If the job’s return value does not contain a resource value,<br>there is no limit on the number of waiters.</p>
+<p>Otherwise, Phox limits the number of waiters for a <code>JobHandle a</code> to <code>1</code> at most.<br>In this case, <code>await job</code> consumes the resource returned by <code>job</code> (ownership
+transfer), and any subsequent calls to <code>await job</code> will result in an error.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Resource operations may interact with external OS resources.<br>External resources are not pure and may cause race conditions.<br>Phox guarantees safety inside the VM, but external resource conflicts<br>must be handled by appropriate OS-level APIs (e.g., file locks).</p>
 </blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="type_definitions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="async.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="async.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="phox_vm_en.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -406,11 +282,11 @@ add 2 + 3
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="type_definitions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="async.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="async.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="phox_vm_en.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
