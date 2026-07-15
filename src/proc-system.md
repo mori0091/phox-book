@@ -112,3 +112,72 @@ transfer), and any subsequent calls to `await job` will result in an error.
 > must be handled by appropriate OS-level APIs (e.g., file locks).
 
 
+---
+
+## Opacity of Resources and Transparency of Resource Ownership
+
+Resource-type values are opaque.  
+However, resource ownership must be structurally visible and transparent.
+
+To prevent resource leaks,  
+Phox restricts the encapsulation of resource values within opaque structures.
+
+Specifically:
+- ADT constructors cannot accept resource values as arguments.
+- Closures, or values containing closures, cannot cross the VM boundary.
+
+Therefore, `await job` cannot return:
+- An ADT value containing a resource or a closure, or
+- A closure, or a value containing a closure.
+
+In other words, `await job` can return the following:
+- An ADT value containing neither a resource nor a closure,
+- Arrays, tuples, or records that do not contain closures,
+- Resource values, or
+- Primitive values.
+
+---
+
+## Rules for Transparency of Resource Ownership
+
+- Resource Inflow Violation Rules:
+  - Values bound by top-level `let`/`let rec` must be *resource-free*
+  - The initial environment of a job is “empty” plus the top-level/global environment  
+    (*resource-free* environment)
+
+- Resource Outflow Violation Rules:
+  - The return value of `await job` must be *resource-transparent*
+
+- Resource Sourcing Violation Rule:
+  - The return value of `proc!{...}` must be *resource-transparent*
+
+- *resource-free*  means
+  : The value must not contain any resource values
+
+- *resource-transparent*  means
+  : The value must not contain any opaque structures, such as ADT values or closures
+
+*resource-transparent* is satisfied by the following rules:
+- ADT constructors cannot accept resource values as arguments.  
+  (This prevents resources from being hidden inside ADTs.)
+- Closures, or values containing closures, cannot cross the VM boundary.  
+  (Closures may capture resources inside proc world, but cannot escape to pure world.)
+- Closures, or values containing closures, cannot escape from proc world to pure world.  
+  (This prevents resources from being hidden inside closure environments.)
+
+*resource-free* is satisfied by the following mechanism:
+- At the top level, values bound by `let`/`let rec` must not contain resources.  
+  This can be verified by examining the type structure of the expression.  
+  **Why is that?**  
+  It is because the expression satisfies *resource transparency* according to the rules described above.  
+  Therefore, for top-level bindings, the type system can reject any values containing resources.  
+  **How?**  
+  By recursively checking the expression’s AST to see if it contains any *non-resource-free* expressions.
+
+> [!NOTE]
+> In other words,  
+> Top-level `let`/`let rec` bindings must be *resource-free*:
+> their right-hand-side expressions (and all subexpressions) must not construct resource values.
+
+---
+![Proc System](./proc-system.svg)

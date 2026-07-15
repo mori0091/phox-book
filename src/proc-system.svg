@@ -1,0 +1,65 @@
+<svg width="1100" height="640" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Styles -->
+  <style>
+    .box { fill:#fdfdfd; stroke:#333; stroke-width:2; }
+    .blue-box { fill:#e0e0fd; stroke:#333; stroke-width:2; }
+    .red-box { fill:#fde0e0; stroke:#333; stroke-width:2; }
+    .yellow-box { fill:#fdfde0; stroke:#333; stroke-width:2; }
+    .title { font-family: sans-serif; font-size:18px; font-weight:bold; }
+    .label { font-family: sans-serif; font-size:14px; }
+    .small { font-family: sans-serif; font-size:12px; }
+  </style>
+
+  <!-- VM Instance #1 -->
+  <rect x="50" y="40" width="450" height="500" class="box"/>
+  <text x="60" y="70" class="title">VM Instance #1</text>
+
+  <!-- Pure World #1 -->
+  <rect x="70" y="100" width="410" height="180" class="blue-box"/>
+  <text x="80" y="130" class="label">Pure World</text>
+  <text x="80" y="155" class="small">• Immutable values</text>
+  <text x="80" y="175" class="small">• Resource-transparent</text>
+  <text x="80" y="195" class="small">• ADT / tuples / records / arrays</text>
+  <text x="80" y="215" class="small">• Closures (cannot cross VM boundary)</text>
+  <text x="80" y="235" class="small">★ Top-level bindings must be resource-free</text>
+
+  <!-- Proc World #1 -->
+  <rect x="70" y="300" width="410" height="180" class="red-box"/>
+  <text x="80" y="330" class="label">Proc World</text>
+  <text x="80" y="355" class="small">• Mutable procedural types (@![a], Slice!, Ptr!)</text>
+  <text x="80" y="375" class="small">• Resource operations (open_file!, write!, ...)</text>
+  <text x="80" y="395" class="small">• Resource values are opaque</text>
+  <text x="80" y="415" class="small">★ Resource operations only here</text>
+  <text x="80" y="435" class="small">★ Resource values cannot cross VM boundary</text>
+
+  <!-- VM Instance #2 -->
+  <rect x="600" y="40" width="450" height="500" class="box"/>
+  <text x="610" y="70" class="title">VM Instance #2</text>
+
+  <!-- Pure World #2 -->
+  <rect x="620" y="100" width="410" height="180" class="blue-box"/>
+  <text x="630" y="130" class="label">Pure World</text>
+  <text x="630" y="155" class="small">• Immutable values</text>
+  <text x="630" y="175" class="small">• Resource-transparent</text>
+  <text x="630" y="195" class="small">• ADT / tuples / records / arrays</text>
+  <text x="630" y="215" class="small">• Closures (cannot cross VM boundary)</text>
+  <text x="630" y="235" class="small">★ Top-level bindings must be resource-free</text>
+
+  <!-- Proc World #2 -->
+  <rect x="620" y="300" width="410" height="180" class="red-box"/>
+  <text x="630" y="330" class="label">Proc World</text>
+  <text x="630" y="355" class="small">• Mutable procedural types (@![a], Slice!, Ptr!)</text>
+  <text x="630" y="375" class="small">• Resource operations (open_file!, write!, ...)</text>
+  <text x="630" y="395" class="small">• Resource values are opaque</text>
+  <text x="630" y="415" class="small">★ Resource operations only here</text>
+  <text x="630" y="435" class="small">★ Resource values cannot cross VM boundary</text>
+
+  <!-- await job (center) -->
+  <rect x="300" y="520" width="500" height="110" class="yellow-box"/>
+  <text x="310" y="550" class="label">schedule sc (task e) — instantiate VM instance as job</text>
+  <text x="310" y="570" class="label">await job — the ONLY synchronization point</text>
+  <text x="310" y="590" class="small">• pure values → freely shareable</text>
+  <text x="310" y="610" class="small">• resource values → ownership moves to caller VM</text>
+
+</svg>
