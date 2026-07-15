@@ -96,7 +96,7 @@ impl Schedule DefaultScheduler a {
 
 let _DEFAULT_SCHEDULER_ = DefaultScheduler @{ /* ... */ };
 
-*let async = scheduler _DEFAULTSCHEDULER_ << task;
+*let async = schedule _DEFAULT_SCHEDULER_ << task;
 // `await (async e) |> (\Ok x. x)`   // => `@{TryAwait h a}.await` is performed
 // `await (async e) |> (\x. x + 1)`  // => `@{Await h Int}.await` is performed
 
