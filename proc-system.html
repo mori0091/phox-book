@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-058c4906.js";
+            window.path_to_searchindex_js = "searchindex-eb572f42.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8f4cfda8.js"></script>
@@ -263,6 +263,79 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Resource operations may interact with external OS resources.<br>External resources are not pure and may cause race conditions.<br>Phox guarantees safety inside the VM, but external resource conflicts<br>must be handled by appropriate OS-level APIs (e.g., file locks).</p>
 </blockquote>
+<hr>
+<h2 id="opacity-of-resources-and-transparency-of-resource-ownership"><a class="header" href="#opacity-of-resources-and-transparency-of-resource-ownership">Opacity of Resources and Transparency of Resource Ownership</a></h2>
+<p>Resource-type values are opaque.<br>However, resource ownership must be structurally visible and transparent.</p>
+<p>To prevent resource leaks,<br>Phox restricts the encapsulation of resource values within opaque structures.</p>
+<p>Specifically:</p>
+<ul>
+<li>ADT constructors cannot accept resource values as arguments.</li>
+<li>Closures, or values containing closures, cannot cross the VM boundary.</li>
+</ul>
+<p>Therefore, <code>await job</code> cannot return:</p>
+<ul>
+<li>An ADT value containing a resource or a closure, or</li>
+<li>A closure, or a value containing a closure.</li>
+</ul>
+<p>In other words, <code>await job</code> can return the following:</p>
+<ul>
+<li>An ADT value containing neither a resource nor a closure,</li>
+<li>Arrays, tuples, or records that do not contain closures,</li>
+<li>Resource values, or</li>
+<li>Primitive values.</li>
+</ul>
+<hr>
+<h2 id="rules-for-transparency-of-resource-ownership"><a class="header" href="#rules-for-transparency-of-resource-ownership">Rules for Transparency of Resource Ownership</a></h2>
+<ul>
+<li>
+<p>Resource Inflow Violation Rules:</p>
+<ul>
+<li>Values bound by top-level <code>let</code>/<code>let rec</code> must be <em>resource-free</em></li>
+<li>The initial environment of a job is “empty” plus the top-level/global environment<br>(<em>resource-free</em> environment)</li>
+</ul>
+</li>
+<li>
+<p>Resource Outflow Violation Rules:</p>
+<ul>
+<li>The return value of <code>await job</code> must be <em>resource-transparent</em></li>
+</ul>
+</li>
+<li>
+<p>Resource Sourcing Violation Rule:</p>
+<ul>
+<li>The return value of <code>proc!{...}</code> must be <em>resource-transparent</em></li>
+</ul>
+</li>
+<li>
+<dl>
+<dt id="resource-free--means"><a class="header" href="#resource-free--means"><em>resource-free</em>  means</a></dt>
+<dd>The value must not contain any resource values</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt id="resource-transparent--means"><a class="header" href="#resource-transparent--means"><em>resource-transparent</em>  means</a></dt>
+<dd>The value must not contain any opaque structures, such as ADT values or closures</dd>
+</dl>
+</li>
+</ul>
+<p><em>resource-transparent</em> is satisfied by the following rules:</p>
+<ul>
+<li>ADT constructors cannot accept resource values as arguments.<br>(This prevents resources from being hidden inside ADTs.)</li>
+<li>Closures, or values containing closures, cannot cross the VM boundary.<br>(Closures may capture resources inside proc world, but cannot escape to pure world.)</li>
+<li>Closures, or values containing closures, cannot escape from proc world to pure world.<br>(This prevents resources from being hidden inside closure environments.)</li>
+</ul>
+<p><em>resource-free</em> is satisfied by the following mechanism:</p>
+<ul>
+<li>At the top level, values bound by <code>let</code>/<code>let rec</code> must not contain resources.<br>This can be verified by examining the type structure of the expression.<br><strong>Why is that?</strong><br>It is because the expression satisfies <em>resource transparency</em> according to the rules described above.<br>Therefore, for top-level bindings, the type system can reject any values containing resources.<br><strong>How?</strong><br>By recursively checking the expression’s AST to see if it contains any <em>non-resource-free</em> expressions.</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>In other words,<br>Top-level <code>let</code>/<code>let rec</code> bindings must be <em>resource-free</em>:
+their right-hand-side expressions (and all subexpressions) must not construct resource values.</p>
+</blockquote>
+<hr>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./proc-system.svg" alt="Proc System"><span class="img-wrapper"><img src="./proc-system.svg" alt="Proc System"></span></label></p>
 
                     </main>
 
