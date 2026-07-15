@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bc4aeb25.js";
+            window.path_to_searchindex_js = "searchindex-61f237ed.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8f4cfda8.js"></script>
@@ -818,7 +818,7 @@ enum Job {
 <p>Phox separates <em>pure</em> and <em>procedural</em> worlds at the type and syntax level.</p>
 <hr>
 <h2 id="procedural-types"><a class="header" href="#procedural-types">Procedural types</a></h2>
-<p>Procedural types (<code>@![a]</code>, <code>Slice!</code>, <code>Ptr!</code>, …) represent <em>mutable</em> data structures used only inside procedural blocks.</p>
+<p>Procedural types (<code>DynArray! a</code>, <code>Slice! a</code>, <code>Ptr! a</code>, …) represent <em>mutable</em> data structures used only inside procedural blocks.</p>
 <ul>
 <li><strong>cannot escape</strong> into the pure world</li>
 <li>pure functions <strong>cannot observe</strong> or depend on them</li>
@@ -827,9 +827,9 @@ enum Job {
 </ul>
 <p>Procedural types are always local to a single VM instance and never shared.</p>
 <pre><code class="language-phox">proc! {
-    let xs! = thaw!(xs);     // @[a] → @![a]
-    do_inplace_operation!(xs!);
-    freeze!(xs!)             // @![a] → @[a]
+    let buf = thaw!(xs);     // @[a] → DynArray a
+    do_inplace_operation!(buf);
+    freeze!(buf)             // DynArray a → @[a]
 }
 </code></pre>
 <hr>
