@@ -6,7 +6,7 @@ Phox separates *pure* and *procedural* worlds at the type and syntax level.
 
 ## Procedural types
 
-Procedural types (`@![a]`, `Slice!`, `Ptr!`, …) represent *mutable* data structures used only inside procedural blocks.
+Procedural types (`DynArray! a`, `Slice! a`, `Ptr! a`, …) represent *mutable* data structures used only inside procedural blocks.
 
 - **cannot escape** into the pure world  
 - pure functions **cannot observe** or depend on them  
@@ -17,9 +17,9 @@ Procedural types are always local to a single VM instance and never shared.
 
 ```phox
 proc! {
-    let xs! = thaw!(xs);     // @[a] → @![a]
-    do_inplace_operation!(xs!);
-    freeze!(xs!)             // @![a] → @[a]
+    let buf = thaw!(xs);     // @[a] → DynArray a
+    do_inplace_operation!(buf);
+    freeze!(buf)             // DynArray a → @[a]
 }
 ```
 
