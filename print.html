@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-61f237ed.js";
+            window.path_to_searchindex_js = "searchindex-2dbb9873.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8f4cfda8.js"></script>
+        <script src="toc-8612ab2e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -664,6 +664,25 @@ add 2 + 3
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
 </blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="phox-design-principles"><a class="header" href="#phox-design-principles">Phox Design Principles</a></h1>
+<blockquote>
+<p><em>See widely.<br>Think deeply.<br>Step back, breath, and see widely again.<br>It’s okay? then<br>Build simply.</em></p>
+<p>Appropriate structure should make desired properties emerge.</p>
+<p>Don’t add. Polish. Compose.</p>
+</blockquote>
+<p>Every element that makes up <strong>Phox</strong> ‐ including its concept, syntax, semantics,<br>type system, run-time system, abstract machine, and standard library ‐<br><strong>should satisfy all six of the following principles</strong>:</p>
+<ol>
+<li>High purity</li>
+<li>Orthogonality</li>
+<li>Clarity</li>
+<li>Simplicity</li>
+<li>Predictability</li>
+<li>Theoritical optimality</li>
+</ol>
+<p>Complexity must be eliminated, not accommodated.</p>
+<p>Phox is not so easy, but<br>Phox must be kind to both humans and machines.</p>
+<p><strong>No magic. Be gentle.</strong></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="wip-async-computation-and-async-io"><a class="header" href="#wip-async-computation-and-async-io">[WIP] Async-Computation and Async I/O</a></h1>
 <p>An asynchronous <em>task</em> ≒ <em>VM instance</em>.<br>(The Phox VM itself is a state-machine based on <em>Suspendable Term Reduction Abstract Machine (STReAM)</em>)</p>
@@ -1523,6 +1542,8 @@ with the result and evaluate <code>E</code>.</dd>
 Hello, world! (Finally, we meet!)
 =&gt; (): ()
 </code></pre>
+<hr>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="Phox-STReAM_1024x1024.png" alt="Phox-STReAM"><span class="img-wrapper"><img src="Phox-STReAM_1024x1024.png" alt="Phox-STReAM"></span></label></p>
 
                     </main>
 
