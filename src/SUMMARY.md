@@ -48,6 +48,7 @@
 
 ---
 # 🎶 Design Notes
+- [Phox Design Principles](./design_principles.md)
 - [Iterators, generators, and sink]()
 - [Arrays API]()
 - [Automatic Safety Mechanism Selection via Context-Sensitive Multi-Dispatch]()
