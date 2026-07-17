@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2dbb9873.js";
+            window.path_to_searchindex_js = "searchindex-8eb7f380.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8612ab2e.js"></script>
@@ -178,21 +178,32 @@
                     <main>
                         <h1 id="wip-async-computation-and-async-io"><a class="header" href="#wip-async-computation-and-async-io">[WIP] Async-Computation and Async I/O</a></h1>
 <p>An asynchronous <em>task</em> ≒ <em>VM instance</em>.<br>(The Phox VM itself is a state-machine based on <em>Suspendable Term Reduction Abstract Machine (STReAM)</em>)</p>
-<p>An asynchronous task is executed by a dedicated VM instance.<br>Each VM instance is a single-threaded execution context.<br>Multiple VM instances may be executed in concurrent by dedicated threads.<br>(depends on scheduler implementations)</p>
+<p>An asynchronous task is executed by a dedicated VM instance.<br>Each VM instance is a single-threaded execution context.<br>Multiple VM instances may be executed in concurrently by dedicated threads.<br>(depends on scheduler implementations)</p>
+<hr>
+<h2 id="user-defined-tasks"><a class="header" href="#user-defined-tasks">User-defined tasks</a></h2>
+<p><strong>Define task constructors</strong>:</p>
+<ul>
+<li>Task constructor name must end with <code>&amp;</code></li>
+<li>Task constructors are <strong>uncurried</strong></li>
+<li><code>task(args..) {...}</code> is <strong>task constructor abstraction</strong></li>
+</ul>
+<pre><code class="language-rust ignore">*let foo&amp; = task(x) {...};
+*let bar&amp; = task(x,y) {...};
+*let download&amp; = task(url) {...};</code></pre>
+<p><strong>Constructs a task</strong>:</p>
+<ul>
+<li>A call to a task constructor constructs a <strong>task abstraction</strong>.</li>
+<li>A task abstraction (or simply “task”) of type <code>Task a</code> wraps an expression <code>e</code> of type <code>a</code>,<br>where <code>e</code> is the task constructors’ body.</li>
+<li>The expression <code>e</code> is not evaluated immediatelly.</li>
+</ul>
+<pre><code class="language-rust ignore">let tsk = download&amp;(url);</code></pre>
+<p><strong>Schedule a task</strong> and instantiate the corresponding job:</p>
+<pre><code class="language-rust ignore">let job = schedule _DEFAULT_SCHEDULER_ tsk;</code></pre>
+<p><strong>Await the job completes</strong> and take result:</p>
+<pre><code class="language-rust ignore">let res = await job;</code></pre>
 <hr>
 <h2 id="async-apis-and-semantics"><a class="header" href="#async-apis-and-semantics">Async-APIs and semantics</a></h2>
 <ul>
-<li>
-<dl>
-<dt id="task--a---task-a"><a class="header" href="#task--a---task-a"><code>task : a -&gt; Task a</code></a></dt>
-<dd><code>task e</code>
-<ul>
-<li><code>task e</code> constructs a task abstraction of type <code>Task a</code>, that wraps the expression <code>e</code>.</li>
-<li>The expression <code>e</code> of type <code>a</code> is not evaluated immediatelly.</li>
-</ul>
-</dd>
-</dl>
-</li>
 <li>
 <dl>
 <dt id="schedule--sc---task-a---jobhandle-a"><a class="header" href="#schedule--sc---task-a---jobhandle-a"><code>schedule : sc -&gt; Task a -&gt; JobHandle a</code></a></dt>
@@ -247,7 +258,7 @@
 <li>Otherwise,
 <ul>
 <li>mark the <code>job</code> as <em>canceled</em>, then</li>
-<li><code>Err err</code> is pased to all jobs waiting in its wait-queue,</li>
+<li><code>Err err</code> is passed to all jobs waiting in its wait-queue,</li>
 <li>and awake them. (i.e. schedule them again)</li>
 <li>the wait-queue shall be cleared.</li>
 </ul>
@@ -306,9 +317,10 @@ impl Schedule DefaultScheduler a {
 
 let _DEFAULT_SCHEDULER_ = DefaultScheduler @{ /* ... */ };
 
-*let async = schedule _DEFAULT_SCHEDULER_ &lt;&lt; task;
-// `await (async e) |&gt; (\Ok x. x)`   // =&gt; `@{TryAwait h a}.await` is performed
-// `await (async e) |&gt; (\x. x + 1)`  // =&gt; `@{Await h Int}.await` is performed
+// let t = ... ;             // t : Task a
+// let job = schedule sc t;  // job : JobHandle a
+// `await job |&gt; (\Ok x. x)`   // =&gt; `@{TryAwait h a}.await` is performed
+// `await job |&gt; (\x. x + 1)`  // =&gt; `@{Await h Int}.await` is performed
 
 </code></pre>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
