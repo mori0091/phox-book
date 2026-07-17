@@ -27,20 +27,26 @@ proc! {
 
 ## User-defined procedures
 
-```phox
-// Define procedures
-// - Procedure name must end with `!`
-// - Procedures are **uncurried**
-// - `proc(args..) {...}` is **procedure abstraction**
+**Define procedures**:
+- Procedure name must end with `!`
+- Procedures are **uncurried**
+- `proc(args..) {...}` is **procedure abstraction**
+
+```rust , ignore
 *let foo! = proc(x) {...};
 *let bar! = proc(x,y) {...};
+*let download! = proc(url) {...};
+```
 
-// Procedure call (only allowed inside `proc! { ... }`)
+**Procedure call** (only allowed inside `proc! { ... }`):
+```rust , ignore
 proc! {
   foo!(1);
   bar!(2,3);
   ()  // `proc! {...}` must return a **pure** value
 };
+
+let x = proc! { download!(url) };
 ```
 
 ---
@@ -142,7 +148,11 @@ In other words, `await job` can return the following:
 
 - Resource Inflow Violation Rules:
   - Values bound by top-level `let`/`let rec` must be *resource-free*
-  - The initial environment of a job is “empty” plus the top-level/global environment  
+  - Values passed to a `task` constructor as its arguments must be *resource-free*.  
+    These values will be bound to the initial environment of the corresponding job.
+  - The initial environment of a job contains the task's arguments only.  
+    (*resource-free* environment)
+  - And job can access to the top-level/global environment.  
     (*resource-free* environment)
 
 - Resource Outflow Violation Rules:
@@ -157,7 +167,7 @@ In other words, `await job` can return the following:
 - *resource-transparent*  means
   : The value must not contain any opaque structures, such as ADT values or closures
 
-*resource-transparent* is satisfied by the following rules:
+*resource-transparency* is satisfied by the following rules:
 - ADT constructors cannot accept resource values as arguments.  
   (This prevents resources from being hidden inside ADTs.)
 - Closures, or values containing closures, cannot cross the VM boundary.  
@@ -165,19 +175,26 @@ In other words, `await job` can return the following:
 - Closures, or values containing closures, cannot escape from proc world to pure world.  
   (This prevents resources from being hidden inside closure environments.)
 
-*resource-free* is satisfied by the following mechanism:
-- At the top level, values bound by `let`/`let rec` must not contain resources.  
-  This can be verified by examining the type structure of the expression.  
-  **Why is that?**  
-  It is because the expression satisfies *resource transparency* according to the rules described above.  
-  Therefore, for top-level bindings, the type system can reject any values containing resources.  
-  **How?**  
-  By recursively checking the expression’s AST to see if it contains any *non-resource-free* expressions.
+*resource-free* is satisfied by the following rules:
+- At the top level, values bound by `let`/`let rec` must not contain resources.
+- Values passed to a `task` constructor as its arguments must not contain resources.
+
+*resources-free* rules can be statically verified by examining the type structure of the expression.
+- **Why is that?**
+  : It is because the expression satisfies *resource transparency*  
+    according to the rules described above.  
+    Therefore, for top-level bindings and arguments of `task` constructors,  
+    the type system can reject any values containing resources.
+- **How?**
+  : By recursively checking the expression’s AST to see  
+    if it contains any *non-resource-free* expressions.
 
 > [!NOTE]
 > In other words,  
-> Top-level `let`/`let rec` bindings must be *resource-free*:
-> their right-hand-side expressions (and all subexpressions) must not construct resource values.
+> - Top-level `let`/`let rec` bindings must be *resource-free*:  
+>   their right-hand-side expressions (and all subexpressions) must not construct resource values.
+> - A call to the `task` constructor must be *resource-free*.  
+>   The expression passed as its argument (and all its sub-expressions) must not contain any resource values.
 
 ---
 ![Proc System](./proc-system.svg)

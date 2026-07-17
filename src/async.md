@@ -5,17 +5,49 @@ An asynchronous *task* ≒ *VM instance*.
 
 An asynchronous task is executed by a dedicated VM instance.  
 Each VM instance is a single-threaded execution context.  
-Multiple VM instances may be executed in concurrent by dedicated threads.  
+Multiple VM instances may be executed in concurrently by dedicated threads.  
 (depends on scheduler implementations)
 
 ---
 
-## Async-APIs and semantics
+## User-defined tasks
 
-- `task : a -> Task a`  
-  : `task e`  
-    - `task e` constructs a task abstraction of type `Task a`, that wraps the expression `e`.  
-    - The expression `e` of type `a` is not evaluated immediatelly.  
+**Define task constructors**:
+- Task constructor name must end with `&`
+- Task constructors are **uncurried**
+- `task(args..) {...}` is **task constructor abstraction**
+
+```rust , ignore
+*let foo& = task(x) {...};
+*let bar& = task(x,y) {...};
+*let download& = task(url) {...};
+```
+
+**Constructs a task**:
+- A call to a task constructor constructs a **task abstraction**.
+- A task abstraction (or simply "task") of type `Task a` wraps an expression `e` of type `a`,  
+  where `e` is the task constructors' body.
+- The expression `e` is not evaluated immediatelly.
+
+```rust , ignore
+let tsk = download&(url);
+```
+
+**Schedule a task** and instantiate the corresponding job:
+
+```rust , ignore
+let job = schedule _DEFAULT_SCHEDULER_ tsk;
+```
+
+**Await the job completes** and take result:
+
+```rust , ignore
+let res = await job;
+```
+
+---
+
+## Async-APIs and semantics
 
 - `schedule : sc -> Task a -> JobHandle a`  
   : `schedule sc t`  
@@ -43,7 +75,7 @@ Multiple VM instances may be executed in concurrent by dedicated threads.
     - If the `job` has already finished or canceled, returns `()`.  
     - Otherwise,  
       - mark the `job` as *canceled*, then  
-      - `Err err` is pased to all jobs waiting in its wait-queue,  
+      - `Err err` is passed to all jobs waiting in its wait-queue,  
       - and awake them. (i.e. schedule them again)  
       - the wait-queue shall be cleared.
 
@@ -96,9 +128,10 @@ impl Schedule DefaultScheduler a {
 
 let _DEFAULT_SCHEDULER_ = DefaultScheduler @{ /* ... */ };
 
-*let async = schedule _DEFAULT_SCHEDULER_ << task;
-// `await (async e) |> (\Ok x. x)`   // => `@{TryAwait h a}.await` is performed
-// `await (async e) |> (\x. x + 1)`  // => `@{Await h Int}.await` is performed
+// let t = ... ;             // t : Task a
+// let job = schedule sc t;  // job : JobHandle a
+// `await job |> (\Ok x. x)`   // => `@{TryAwait h a}.await` is performed
+// `await job |> (\x. x + 1)`  // => `@{Await h Int}.await` is performed
 
 ```
 
