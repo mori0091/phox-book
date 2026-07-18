@@ -92,9 +92,13 @@ because procedural types never escape and pure values are immutable.
 
 Each VM instance is a single-threaded execution context.
 
-- procedural types never escape → **no shared mutable state**  
-- pure values are immutable → **safe to share**  
-- resource values are opaque → **safe to share as long as operations are restricted to proc world**
+- procedural types never escape  
+  → **no shared mutable state**  
+- pure values are immutable  
+  → **safe to share**  
+- resource values are opaque  
+  → **safe to share as long as operations are restricted to proc world  
+    and isolated within VM boundaries**
 
 **Only the `await` operation can transfer resource values between VM instances.**
 
@@ -129,16 +133,12 @@ To prevent resource leaks,
 Phox restricts the encapsulation of resource values within opaque structures.
 
 Specifically:
-- ADT constructors cannot accept resource values as arguments.
-- Closures, or values containing closures, cannot cross the VM boundary.
+- ADT values cannot cross the VM boundary.
+- Closures cannot cross the VM boundary.
+- Any values containing ADT values or closures cannot cross the VM boundary.
 
-Therefore, `await job` cannot return:
-- An ADT value containing a resource or a closure, or
-- A closure, or a value containing a closure.
-
-In other words, `await job` can return the following:
-- An ADT value containing neither a resource nor a closure,
-- Arrays, tuples, or records that do not contain closures,
+Therefore, `await job` can return the following:
+- Arrays, tuples, or records that do not contain ADT values nor closures,
 - Resource values, or
 - Primitive values.
 
@@ -159,27 +159,25 @@ In other words, `await job` can return the following:
   - The return value of `await job` must be *resource-transparent*
 
 - Resource Sourcing Violation Rule:
-  - The return value of `proc!{...}` must be *resource-transparent*
+  - The return value of `proc!{...}` must be *resource-transparent*  
+    **if such expressions exist in top-level `let`/`let rec` bindings**.
+
+
+where:
 
 - *resource-free*  means
   : The value must not contain any resource values
 
 - *resource-transparent*  means
-  : The value must not contain any opaque structures, such as ADT values or closures
+  : The value must not contain any opaque structures, such as ADT values or closures  
+    (This prevents resources from being hidden inside ADTs or closures.)
 
-*resource-transparency* is satisfied by the following rules:
-- ADT constructors cannot accept resource values as arguments.  
-  (This prevents resources from being hidden inside ADTs.)
-- Closures, or values containing closures, cannot cross the VM boundary.  
-  (Closures may capture resources inside proc world, but cannot escape to pure world.)
-- Closures, or values containing closures, cannot escape from proc world to pure world.  
-  (This prevents resources from being hidden inside closure environments.)
 
 *resource-free* is satisfied by the following rules:
-- At the top level, values bound by `let`/`let rec` must not contain resources.
-- Values passed to a `task` constructor as its arguments must not contain resources.
+- Values passed to a `task` constructor as its arguments must not contain resources, ADTs, or closures.
+- At the top level, values bound by `let`/`let rec` must not contain resources. (but may be ADTs or closures)
 
-*resources-free* rules can be statically verified by examining the type structure of the expression.
+These *resources-free* rules can be statically verified by examining the type structure and AST of the expression.
 - **Why is that?**
   : It is because the expression satisfies *resource transparency*  
     according to the rules described above.  
@@ -194,7 +192,30 @@ In other words, `await job` can return the following:
 > - Top-level `let`/`let rec` bindings must be *resource-free*:  
 >   their right-hand-side expressions (and all subexpressions) must not construct resource values.
 > - A call to the `task` constructor must be *resource-free*.  
->   The expression passed as its argument (and all its sub-expressions) must not contain any resource values.
+>   The expression passed as its argument (and all its sub-expressions) must not contain any resource values, ADTs, nor closures.
 
 ---
 ![Proc System](./proc-system.svg)
+
+---
+
+## Open issues
+
+> [!NOTE]
+> **TODO**: Phox must detect and eliminate cases where top-level `let`/`let rec`
+> bindings contain resource values **by recursively checking the AST**.
+> 
+> The below is the typical case:
+
+```rust , ignore
+// `r` is a resource value.
+let r = proc!{ open_file!("foo.txt") };
+
+// λ expression that captures resource `r`.
+let f = \x. proc! { write!(r, x); };
+
+// Note that value structure of type `MyADT a` is opaque for the type system.(!)
+// ADT values can encapsulate closures. (resource `r` leaks!)
+type MyADT a = MyADT (a -> ());
+let v = MyADT f;
+```
