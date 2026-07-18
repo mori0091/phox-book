@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-83e7a3f0.js";
+            window.path_to_searchindex_js = "searchindex-31ecf0bb.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8612ab2e.js"></script>
@@ -327,7 +327,7 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <li>Values passed to a <code>task</code> constructor as its arguments must not contain resources, ADTs, or closures.</li>
 <li>At the top level, values bound by <code>let</code>/<code>let rec</code> must not contain resources. (but may be ADTs or closures)</li>
 </ul>
-<p>These <em>resources-free</em> rules can be statically verified by examining the type structure and AST of the expression.</p>
+<p>These <em>resource-free</em> rules can be statically verified by examining the type structure and AST of the expression.</p>
 <ul>
 <li>
 <dl>
