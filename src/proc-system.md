@@ -177,7 +177,7 @@ where:
 - Values passed to a `task` constructor as its arguments must not contain resources, ADTs, or closures.
 - At the top level, values bound by `let`/`let rec` must not contain resources. (but may be ADTs or closures)
 
-These *resources-free* rules can be statically verified by examining the type structure and AST of the expression.
+These *resource-free* rules can be statically verified by examining the type structure and AST of the expression.
 - **Why is that?**
   : It is because the expression satisfies *resource transparency*  
     according to the rules described above.  
