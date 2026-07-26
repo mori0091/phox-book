@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-31ecf0bb.js";
+            window.path_to_searchindex_js = "searchindex-872eb606.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8612ab2e.js"></script>
+        <script src="toc-d63afce9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -941,13 +941,12 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <p>To prevent resource leaks,<br>Phox restricts the encapsulation of resource values within opaque structures.</p>
 <p>Specifically:</p>
 <ul>
-<li>ADT values cannot cross the VM boundary.</li>
 <li>Closures cannot cross the VM boundary.</li>
-<li>Any values containing ADT values or closures cannot cross the VM boundary.</li>
+<li>Any values containing closures cannot cross the VM boundary.</li>
 </ul>
 <p>Therefore, <code>await job</code> can return the following:</p>
 <ul>
-<li>Arrays, tuples, or records that do not contain ADT values nor closures,</li>
+<li>ADTs, Arrays, tuples, or records that do not contain closures,</li>
 <li>Resource values, or</li>
 <li>Primitive values.</li>
 </ul>
@@ -980,34 +979,14 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <ul>
 <li>
 <dl>
-<dt id="resource-free--means"><a class="header" href="#resource-free--means"><em>resource-free</em>  means</a></dt>
+<dt id="resource-free-means"><a class="header" href="#resource-free-means"><em>resource-free</em> means</a></dt>
 <dd>The value must not contain any resource values</dd>
 </dl>
 </li>
 <li>
 <dl>
-<dt id="resource-transparent--means"><a class="header" href="#resource-transparent--means"><em>resource-transparent</em>  means</a></dt>
-<dd>The value must not contain any opaque structures, such as ADT values or closures<br>(This prevents resources from being hidden inside ADTs or closures.)</dd>
-</dl>
-</li>
-</ul>
-<p><em>resource-free</em> is satisfied by the following rules:</p>
-<ul>
-<li>Values passed to a <code>task</code> constructor as its arguments must not contain resources, ADTs, or closures.</li>
-<li>At the top level, values bound by <code>let</code>/<code>let rec</code> must not contain resources. (but may be ADTs or closures)</li>
-</ul>
-<p>These <em>resource-free</em> rules can be statically verified by examining the type structure and AST of the expression.</p>
-<ul>
-<li>
-<dl>
-<dt id="why-is-that"><a class="header" href="#why-is-that"><strong>Why is that?</strong></a></dt>
-<dd>It is because the expression satisfies <em>resource transparency</em><br>according to the rules described above.<br>Therefore, for top-level bindings and arguments of <code>task</code> constructors,<br>the type system can reject any values containing resources.</dd>
-</dl>
-</li>
-<li>
-<dl>
-<dt id="how"><a class="header" href="#how"><strong>How?</strong></a></dt>
-<dd>By recursively checking the expression’s AST to see<br>if it contains any <em>non-resource-free</em> expressions.</dd>
+<dt id="resource-transparent-means"><a class="header" href="#resource-transparent-means"><em>resource-transparent</em> means</a></dt>
+<dd>The value must not contain any opaque structures, such as closures<br>(This prevents resources from being hidden inside ADTs or closures.)</dd>
 </dl>
 </li>
 </ul>
@@ -1016,7 +995,8 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <p>In other words,</p>
 <ul>
 <li>Top-level <code>let</code>/<code>let rec</code> bindings must be <em>resource-free</em>:<br>their right-hand-side expressions (and all subexpressions) must not construct resource values.</li>
-<li>A call to the <code>task</code> constructor must be <em>resource-free</em>.<br>The expression passed as its argument (and all its sub-expressions) must not contain any resource values, ADTs, nor closures.</li>
+<li>A call to the <code>task</code> constructor must be <em>resource-free</em>.<br>The expression passed as its argument (and all its sub-expressions) must not contain any resource values nor opaque structures.</li>
+<li>The return value of <code>await job</code> (i.e. the resulting value of a <code>task</code>) must be <em>resource-transparent</em>.</li>
 </ul>
 </blockquote>
 <hr>
@@ -1039,6 +1019,121 @@ let f = \x. proc! { write!(r, x); };
 // ADT values can encapsulate closures. (resource `r` leaks!)
 type MyADT a = MyADT (a -&gt; ());
 let v = MyADT f;</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><strong>T.B.D.</strong>: Phox may restrict use of <code>proc! {...}</code> only for <code>*let</code> template definitions.<br>This can eliminate most miss-usecases like the above in the language syntax-level.</p>
+</blockquote>
+<p>See also <a href="#wip-structural-transparency-of-types-strat">Structural Transparency of Types (STraT)</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="wip-structural-transparency-of-types-strat"><a class="header" href="#wip-structural-transparency-of-types-strat">[WIP] Structural Transparency of Types (STraT)</a></h1>
+<p><em>Structural Transparency of Types (STraT)</em> is an attribute of types.</p>
+<hr>
+<h2 id="definition"><a class="header" href="#definition">Definition</a></h2>
+<pre><code class="language-rust ignore">enum StructuralTransparency {
+  Opaque,                             // the type is opaque
+  SemiTransparent { ts: Vec&lt;Type&gt; },  // transparency of the type depends on transparency of `ts`.
+  Transparent,                        // the type is transparent
+  Any,                                // transparency is not determined (for fresh type variable)
+}</code></pre>
+<ul>
+<li>Function types (closures) are <code>Opaque</code>.</li>
+<li>Primitive types are <code>Transparent</code>.</li>
+<li>Procedural types; such as dynamic arrays; are <code>Opaque</code>.<br>(Meaningless because they cannot escape to pure world and cannot cross the VM boundary)</li>
+<li>Resource types; such as file-handle; are <code>Transparent</code>.<br>(Though its value structure is opaque, the run-time system ensures that it contains no other resources nor closures)</li>
+<li>Tuples, Arrays, Records are:
+<ul>
+<li><code>Opaque</code> if an element type was <code>Opaque</code>,</li>
+<li><code>Transparent</code> if all element types were <code>Transparent</code>,</li>
+<li><code>SemiTransparent</code> otherwise.</li>
+</ul>
+</li>
+<li>ADTs are:
+<ul>
+<li><code>Opaque</code> if an element of any variant was <code>Opaque</code>,</li>
+<li><code>Transparent</code> if all element types of all variants were <code>Transparent</code>,</li>
+<li><code>SemiTransparent</code> otherwise.</li>
+</ul>
+</li>
+<li>Fresh type variables are <code>Any</code>.<br>(Their transparency is determined via type unification process)</li>
+</ul>
+<hr>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<ul>
+<li><code>a</code> is <code>Any</code> (if not unified yet)</li>
+<li><code>a -&gt; b</code> is <code>Opaque</code>.</li>
+<li><code>Int</code> is <code>Transparent</code>.</li>
+<li><code>File!</code> is <code>Transparent</code>. (resource types)</li>
+<li><code>Option Int</code> is <code>Transparent</code>.</li>
+<li><code>Option File!</code> is <code>Transparent</code>.</li>
+<li><code>Option a</code> is <code>SemiTransparent { ts: vec![a] }</code>.</li>
+<li><code>Result e a</code> is <code>SemiTransparent { ts: vec![e, a] }</code>.</li>
+<li><code>Map s a b</code> is <code>Opaque</code>. (because its data constructor is <code>Map (a -&gt; b) (s a)</code>)</li>
+</ul>
+<hr>
+<h2 id="unification"><a class="header" href="#unification">Unification</a></h2>
+<p>If type <code>t1</code> and <code>t2</code> are successfully unified (<code>unify(t1, t2)</code> succeeded),<br>their <em>STraT</em> attributes are merged.</p>
+<ul>
+<li><code>merge(X, Opaque) = Opaque</code></li>
+<li><code>merge(Opaque, X) = Opaque</code></li>
+<li><code>merge(Transparent, Transparent) = Transparent</code></li>
+<li><code>merge(Transparent, SemiTransparent{A}) = SemiTransparent{A}</code></li>
+<li><code>merge(SemiTransparent{A}, Transparent) = SemiTransparent{A}</code></li>
+<li><code>merge(SemiTransparent{A}, SemiTransparent{B}) = SemiTransparent{A ∪ B}</code></li>
+<li><code>merge(X, Any) = X</code></li>
+<li><code>merge(Any, X) = X</code></li>
+</ul>
+<p>In other words, the unification of <em>STraT</em> corresponds to
+the maximum (join) of the following partially ordered set (poset):</p>
+<pre><code>Opaque &gt; SemiTransparent &gt; Transparent &gt; Any
+</code></pre>
+<hr>
+<h2 id="type-constraints"><a class="header" href="#type-constraints">Type Constraints</a></h2>
+<ul>
+<li><code>ResourceFree</code> = “No resource value”</li>
+<li><code>ResourceTransparent</code> = “No opaque values that hide resources”</li>
+</ul>
+<p>By definition, a resource type is <strong>transparent as a type</strong> but <strong>opaque as a value</strong>.</p>
+<p>In contrast, <code>ResourceFree</code> and <code>ResourceTransparent</code> are type-constraints that<br>ensure the type system can reliably check for <strong>transparency of resource ownership</strong>.</p>
+<h3 id="resourcefree-type-constraint"><a class="header" href="#resourcefree-type-constraint"><code>ResourceFree</code> type-constraint</a></h3>
+<p>The constraint <code>ResourceFree(ty)</code> is:</p>
+<ul>
+<li>if <code>ty</code> was <code>Opaque</code>:
+<ul>
+<li><code>ResourceFree(ty)</code> causes an error.</li>
+</ul>
+</li>
+<li>if <code>ty</code> was <code>Transparent</code>:
+<ul>
+<li><code>ResourceFree(ty)</code> causes an error, if the <code>ty</code> itself or its type-parameters contain resource types.</li>
+<li><code>ResourceFree(ty)</code> is OK, otherwise.</li>
+</ul>
+</li>
+<li>if <code>ty</code> was <code>SemiTransparent{ts: vec![a, b, ...]}</code>:
+<ul>
+<li><code>ResourceFree(ty)</code> causes an error, if the <code>ty</code> itself or its type-parameters contain resource types.</li>
+<li><code>ResourceFree(ty)</code> is <code>ResourceFree(a) ∧ ResourceFree(b) ∧ ...</code>, otherwise.</li>
+</ul>
+</li>
+</ul>
+<h3 id="resourcetransparent-type-constraint"><a class="header" href="#resourcetransparent-type-constraint"><code>ResourceTransparent</code> type-constraint</a></h3>
+<p>The constraint <code>ResourceTransparent(ty)</code> is:</p>
+<ul>
+<li>if <code>ty</code> was <code>Opaque</code>:
+<ul>
+<li><code>ResourceTransparent(ty)</code> causes an error.</li>
+</ul>
+</li>
+<li>if <code>ty</code> was <code>Transparent</code>:
+<ul>
+<li><code>ResourceTransparent(ty)</code> is OK.</li>
+</ul>
+</li>
+<li>if <code>ty</code> was <code>SemiTransparent{ts: vec![a, b, ...]}</code>:
+<ul>
+<li><code>ResourceTransparent(ty)</code> is <code>ResourceTransparent(a) ∧ ResourceTransparent(b) ∧ ...</code>.</li>
+</ul>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="stream-suspendable-term-reduction-abstract-machine-overview"><a class="header" href="#stream-suspendable-term-reduction-abstract-machine-overview"><strong>STReAM: Suspendable Term Reduction Abstract Machine (overview)</strong></a></h1>
 <h2 id="1-introduction"><a class="header" href="#1-introduction">1. Introduction</a></h2>

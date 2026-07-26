@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-31ecf0bb.js";
+            window.path_to_searchindex_js = "searchindex-872eb606.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8612ab2e.js"></script>
+        <script src="toc-d63afce9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -272,13 +272,12 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <p>To prevent resource leaks,<br>Phox restricts the encapsulation of resource values within opaque structures.</p>
 <p>Specifically:</p>
 <ul>
-<li>ADT values cannot cross the VM boundary.</li>
 <li>Closures cannot cross the VM boundary.</li>
-<li>Any values containing ADT values or closures cannot cross the VM boundary.</li>
+<li>Any values containing closures cannot cross the VM boundary.</li>
 </ul>
 <p>Therefore, <code>await job</code> can return the following:</p>
 <ul>
-<li>Arrays, tuples, or records that do not contain ADT values nor closures,</li>
+<li>ADTs, Arrays, tuples, or records that do not contain closures,</li>
 <li>Resource values, or</li>
 <li>Primitive values.</li>
 </ul>
@@ -311,34 +310,14 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <ul>
 <li>
 <dl>
-<dt id="resource-free--means"><a class="header" href="#resource-free--means"><em>resource-free</em>  means</a></dt>
+<dt id="resource-free-means"><a class="header" href="#resource-free-means"><em>resource-free</em> means</a></dt>
 <dd>The value must not contain any resource values</dd>
 </dl>
 </li>
 <li>
 <dl>
-<dt id="resource-transparent--means"><a class="header" href="#resource-transparent--means"><em>resource-transparent</em>  means</a></dt>
-<dd>The value must not contain any opaque structures, such as ADT values or closures<br>(This prevents resources from being hidden inside ADTs or closures.)</dd>
-</dl>
-</li>
-</ul>
-<p><em>resource-free</em> is satisfied by the following rules:</p>
-<ul>
-<li>Values passed to a <code>task</code> constructor as its arguments must not contain resources, ADTs, or closures.</li>
-<li>At the top level, values bound by <code>let</code>/<code>let rec</code> must not contain resources. (but may be ADTs or closures)</li>
-</ul>
-<p>These <em>resource-free</em> rules can be statically verified by examining the type structure and AST of the expression.</p>
-<ul>
-<li>
-<dl>
-<dt id="why-is-that"><a class="header" href="#why-is-that"><strong>Why is that?</strong></a></dt>
-<dd>It is because the expression satisfies <em>resource transparency</em><br>according to the rules described above.<br>Therefore, for top-level bindings and arguments of <code>task</code> constructors,<br>the type system can reject any values containing resources.</dd>
-</dl>
-</li>
-<li>
-<dl>
-<dt id="how"><a class="header" href="#how"><strong>How?</strong></a></dt>
-<dd>By recursively checking the expression’s AST to see<br>if it contains any <em>non-resource-free</em> expressions.</dd>
+<dt id="resource-transparent-means"><a class="header" href="#resource-transparent-means"><em>resource-transparent</em> means</a></dt>
+<dd>The value must not contain any opaque structures, such as closures<br>(This prevents resources from being hidden inside ADTs or closures.)</dd>
 </dl>
 </li>
 </ul>
@@ -347,7 +326,8 @@ transfer), and any subsequent calls to <code>await job</code> will result in an 
 <p>In other words,</p>
 <ul>
 <li>Top-level <code>let</code>/<code>let rec</code> bindings must be <em>resource-free</em>:<br>their right-hand-side expressions (and all subexpressions) must not construct resource values.</li>
-<li>A call to the <code>task</code> constructor must be <em>resource-free</em>.<br>The expression passed as its argument (and all its sub-expressions) must not contain any resource values, ADTs, nor closures.</li>
+<li>A call to the <code>task</code> constructor must be <em>resource-free</em>.<br>The expression passed as its argument (and all its sub-expressions) must not contain any resource values nor opaque structures.</li>
+<li>The return value of <code>await job</code> (i.e. the resulting value of a <code>task</code>) must be <em>resource-transparent</em>.</li>
 </ul>
 </blockquote>
 <hr>
@@ -370,6 +350,11 @@ let f = \x. proc! { write!(r, x); };
 // ADT values can encapsulate closures. (resource `r` leaks!)
 type MyADT a = MyADT (a -&gt; ());
 let v = MyADT f;</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><strong>T.B.D.</strong>: Phox may restrict use of <code>proc! {...}</code> only for <code>*let</code> template definitions.<br>This can eliminate most miss-usecases like the above in the language syntax-level.</p>
+</blockquote>
+<p>See also <a href="./STraT.html">Structural Transparency of Types (STraT)</a>.</p>
 
                     </main>
 
@@ -379,7 +364,7 @@ let v = MyADT f;</code></pre>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="phox_vm_en.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="STraT.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -393,7 +378,7 @@ let v = MyADT f;</code></pre>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="phox_vm_en.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="STraT.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
