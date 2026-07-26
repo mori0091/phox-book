@@ -133,12 +133,11 @@ To prevent resource leaks,
 Phox restricts the encapsulation of resource values within opaque structures.
 
 Specifically:
-- ADT values cannot cross the VM boundary.
 - Closures cannot cross the VM boundary.
-- Any values containing ADT values or closures cannot cross the VM boundary.
+- Any values containing closures cannot cross the VM boundary.
 
 Therefore, `await job` can return the following:
-- Arrays, tuples, or records that do not contain ADT values nor closures,
+- ADTs, Arrays, tuples, or records that do not contain closures,
 - Resource values, or
 - Primitive values.
 
@@ -165,34 +164,20 @@ Therefore, `await job` can return the following:
 
 where:
 
-- *resource-free*  means
+- *resource-free* means
   : The value must not contain any resource values
 
-- *resource-transparent*  means
-  : The value must not contain any opaque structures, such as ADT values or closures  
+- *resource-transparent* means
+  : The value must not contain any opaque structures, such as closures  
     (This prevents resources from being hidden inside ADTs or closures.)
-
-
-*resource-free* is satisfied by the following rules:
-- Values passed to a `task` constructor as its arguments must not contain resources, ADTs, or closures.
-- At the top level, values bound by `let`/`let rec` must not contain resources. (but may be ADTs or closures)
-
-These *resource-free* rules can be statically verified by examining the type structure and AST of the expression.
-- **Why is that?**
-  : It is because the expression satisfies *resource transparency*  
-    according to the rules described above.  
-    Therefore, for top-level bindings and arguments of `task` constructors,  
-    the type system can reject any values containing resources.
-- **How?**
-  : By recursively checking the expression’s AST to see  
-    if it contains any *non-resource-free* expressions.
 
 > [!NOTE]
 > In other words,  
 > - Top-level `let`/`let rec` bindings must be *resource-free*:  
 >   their right-hand-side expressions (and all subexpressions) must not construct resource values.
 > - A call to the `task` constructor must be *resource-free*.  
->   The expression passed as its argument (and all its sub-expressions) must not contain any resource values, ADTs, nor closures.
+>   The expression passed as its argument (and all its sub-expressions) must not contain any resource values nor opaque structures.
+> - The return value of `await job` (i.e. the resulting value of a `task`) must be *resource-transparent*.
 
 ---
 ![Proc System](./proc-system.svg)
@@ -219,3 +204,11 @@ let f = \x. proc! { write!(r, x); };
 type MyADT a = MyADT (a -> ());
 let v = MyADT f;
 ```
+
+
+> [!NOTE]
+> **T.B.D.**: Phox may restrict use of `proc! {...}` only for `*let` template definitions.  
+> This can eliminate most miss-usecases like the above in the language syntax-level.
+
+
+See also [Structural Transparency of Types (STraT)](./STraT.md).

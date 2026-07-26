@@ -58,6 +58,7 @@
 - [Literals for string familly]()
 - [Async-Computation and Async I/O](./async.md)
 - [Proc System: A Separate World for Controlled Mutation](./proc-system.md)
+- [Structural Transparency of Types (STraT)](./STraT.md)
 - [STReAM / Phox VM (overview)](./phox_vm_en.md)
 - [STReAM / Phox VM (formal semantics)](./phox_vm_spec_en.md)
 - [Phox Type System]()
