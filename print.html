@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-872eb606.js";
+            window.path_to_searchindex_js = "searchindex-c5d0a91c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d63afce9.js"></script>
+        <script src="toc-7cb8c0c7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,6 +193,25 @@
 <li><strong>Module system</strong><br>Rust like module / namespace definition.</li>
 <li><strong>Simple syntax</strong><br>Inspired by ML-family languages, with a focus on clarity.</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="phox-design-principles"><a class="header" href="#phox-design-principles">Phox Design Principles</a></h1>
+<blockquote>
+<p><em>See widely.<br>Think deeply.<br>Step back, breath, and see widely again.<br>It’s okay? then<br>Build simply.</em></p>
+<p>Appropriate structure should make desired properties emerge.</p>
+<p>Don’t add. Polish. Compose.</p>
+</blockquote>
+<p>Every element that makes up <strong>Phox</strong> ‐ including its concept, syntax, semantics,<br>type system, run-time system, abstract machine, and standard library ‐<br><strong>should satisfy all six of the following principles</strong>:</p>
+<ol>
+<li>High purity</li>
+<li>Orthogonality</li>
+<li>Clarity</li>
+<li>Simplicity</li>
+<li>Predictability</li>
+<li>Theoritical optimality</li>
+</ol>
+<p>Complexity must be eliminated, not accommodated.</p>
+<p>Phox is not so easy, but<br>Phox must be kind to both humans and machines.</p>
+<p><strong>No magic. Be gentle.</strong></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="install-phox"><a class="header" href="#install-phox">Install Phox</a></h1>
 <blockquote>
@@ -665,26 +684,41 @@ add 2 + 3
 <p>Old record pattern syntax <code>@{x: p1, y: p2}</code> are deprecated and <strong>no longer supported</strong>.<br>Use new syntax <code>@{x = p1, y = p2}</code> instead.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="phox-design-principles"><a class="header" href="#phox-design-principles">Phox Design Principles</a></h1>
-<blockquote>
-<p><em>See widely.<br>Think deeply.<br>Step back, breath, and see widely again.<br>It’s okay? then<br>Build simply.</em></p>
-<p>Appropriate structure should make desired properties emerge.</p>
-<p>Don’t add. Polish. Compose.</p>
-</blockquote>
-<p>Every element that makes up <strong>Phox</strong> ‐ including its concept, syntax, semantics,<br>type system, run-time system, abstract machine, and standard library ‐<br><strong>should satisfy all six of the following principles</strong>:</p>
-<ol>
-<li>High purity</li>
-<li>Orthogonality</li>
-<li>Clarity</li>
-<li>Simplicity</li>
-<li>Predictability</li>
-<li>Theoritical optimality</li>
-</ol>
-<p>Complexity must be eliminated, not accommodated.</p>
-<p>Phox is not so easy, but<br>Phox must be kind to both humans and machines.</p>
-<p><strong>No magic. Be gentle.</strong></p>
+<h1 id="tbd-parallel-computation"><a class="header" href="#tbd-parallel-computation">[T.B.D.] Parallel computation</a></h1>
+<p><code>par { ... }</code> evaluates expressions in parallel and returns a tuple of results.</p>
+<pre><code class="language-rust ignore">let (x, y, z) = par { e1, e2, e3 };</code></pre>
+<p><code>race { ... }</code> evaluates expressions in parallel and returns the first result obtained.</p>
+<pre><code class="language-rust ignore">let x = race { e1, e2, e3 };</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="wip-async-computation-and-async-io"><a class="header" href="#wip-async-computation-and-async-io">[WIP] Async-Computation and Async I/O</a></h1>
+<h1 id="tbd-reactive-programming"><a class="header" href="#tbd-reactive-programming">[T.B.D.] Reactive programming</a></h1>
+<h2 id="headless-service-agents"><a class="header" href="#headless-service-agents">Headless Service Agents</a></h2>
+<pre><code class="language-rust ignore">// `st` : type of service's state
+// `ev` : type of events / messages
+// `a`  : type of resulting value
+// `Action ev`   : type of command request to the run-time system or other entities.
+// `WatchSet ev` : type of subscription for watching the run-time system or other entities.
+type ServiceST st ev a
+  = Continue st (Action ev) (WatchSet ev)
+  | Done a
+;
+
+type Service st ev a = @{
+  /// `init` is called by the run-time system when the service is started.
+  init   : ServiceST st ev a,
+  /// `update` is called by the run-time system when a event occurred.
+  update : st -&gt; ev -&gt; ServiceST st ev a,
+};
+
+/// Constructs service instance and execute it.
+///  serv : ServiceST st ev a -&gt; (st -&gt; ev -&gt; ServiceST st ev a) -&gt; a
+*let serv = \ini.\upd. {
+  let s = Service @{ init = ini, update = upd };
+  ::core::service:execute s
+};</code></pre>
+<h2 id="gui-applications"><a class="header" href="#gui-applications">GUI applications</a></h2>
+<p>(T.B.D.)</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="tbd-async-computation-and-async-io"><a class="header" href="#tbd-async-computation-and-async-io">[T.B.D.] Async-Computation and Async I/O</a></h1>
 <p>An asynchronous <em>task</em> ≒ <em>VM instance</em>.<br>(The Phox VM itself is a state-machine based on <em>Suspendable Term Reduction Abstract Machine (STReAM)</em>)</p>
 <p>An asynchronous task is executed by a dedicated VM instance.<br>Each VM instance is a single-threaded execution context.<br>Multiple VM instances may be executed in concurrently by dedicated threads.<br>(depends on scheduler implementations)</p>
 <hr>
