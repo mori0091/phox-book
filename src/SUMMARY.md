@@ -1,6 +1,6 @@
 # The Phox Programming Language
-
 [🦊 The Phox Programming Language](./index.md)
+[🎶 Phox Design Principles](./design_principles.md)
 
 # 🚀 Getting Started
 - [Install Phox](./install.md)
@@ -48,7 +48,6 @@
 
 ---
 # 🎶 Design Notes
-- [Phox Design Principles](./design_principles.md)
 - [Iterators, generators, and sink]()
 - [Arrays API]()
 - [Automatic Safety Mechanism Selection via Context-Sensitive Multi-Dispatch]()
@@ -56,6 +55,8 @@
 - [Pretty-Printing Combinators]()
 - [Safe type-familly: `type trait`/`type impl`]()
 - [Literals for string familly]()
+- [Parallel computation](./parallel.md)
+- [Reactive programming](./reactive.md)
 - [Async-Computation and Async I/O](./async.md)
 - [Proc System: A Separate World for Controlled Mutation](./proc-system.md)
 - [Structural Transparency of Types (STraT)](./STraT.md)

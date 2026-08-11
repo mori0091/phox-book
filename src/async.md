@@ -1,4 +1,4 @@
-# [WIP] Async-Computation and Async I/O
+# [T.B.D.] Async-Computation and Async I/O
 
 An asynchronous *task* ≒ *VM instance*.  
 (The Phox VM itself is a state-machine based on *Suspendable Term Reduction Abstract Machine (STReAM)*)
