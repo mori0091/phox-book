@@ -1,5 +1,11 @@
 # [T.B.D.] Reactive programming
 
+## GUI applications
+
+(T.B.D.)
+
+---
+
 ## Headless Service Agents
 
 ```rust , ignore
@@ -21,13 +27,35 @@ type Service st ev a = @{
 };
 
 /// Constructs service instance and execute it.
-///  serv : ServiceST st ev a -> (st -> ev -> ServiceST st ev a) -> a
-*let serv = \ini.\upd. {
+///  serve : ServiceST st ev a -> (st -> ev -> ServiceST st ev a) -> a
+*let serve = \ini.\upd. {
   let s = Service @{ init = ini, update = upd };
   ::core::service:execute s
 };
 ```
 
-## GUI applications
+---
 
-(T.B.D.)
+## Rough sketch of service-execution loop:
+
+```rust , ignore
+*let execute = \Service @{init, update}. {
+    let ctx = proc! { ::core::service::new_context!() };
+    let Done result = for
+        init
+        (\sv. match (sv) {
+            Done _ => false,
+            _      => true,
+        })
+        (\sv. match (sv) {
+            Done _ => sv,
+            Continue st act wset => {
+                // submit action and watch-set, then wait for events / messages
+                let msg = proc! { ::core::service::perform!(ctx, act, wset) };
+                update st msg
+            },
+        })
+    ;
+    result
+};
+```
