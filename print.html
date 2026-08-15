@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c5d0a91c.js";
+            window.path_to_searchindex_js = "searchindex-b0619ef1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7cb8c0c7.js"></script>
@@ -691,6 +691,9 @@ add 2 + 3
 <pre><code class="language-rust ignore">let x = race { e1, e2, e3 };</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="tbd-reactive-programming"><a class="header" href="#tbd-reactive-programming">[T.B.D.] Reactive programming</a></h1>
+<h2 id="gui-applications"><a class="header" href="#gui-applications">GUI applications</a></h2>
+<p>(T.B.D.)</p>
+<hr>
 <h2 id="headless-service-agents"><a class="header" href="#headless-service-agents">Headless Service Agents</a></h2>
 <pre><code class="language-rust ignore">// `st` : type of service's state
 // `ev` : type of events / messages
@@ -710,13 +713,32 @@ type Service st ev a = @{
 };
 
 /// Constructs service instance and execute it.
-///  serv : ServiceST st ev a -&gt; (st -&gt; ev -&gt; ServiceST st ev a) -&gt; a
-*let serv = \ini.\upd. {
+///  serve : ServiceST st ev a -&gt; (st -&gt; ev -&gt; ServiceST st ev a) -&gt; a
+*let serve = \ini.\upd. {
   let s = Service @{ init = ini, update = upd };
   ::core::service:execute s
 };</code></pre>
-<h2 id="gui-applications"><a class="header" href="#gui-applications">GUI applications</a></h2>
-<p>(T.B.D.)</p>
+<hr>
+<h2 id="rough-sketch-of-service-execution-loop"><a class="header" href="#rough-sketch-of-service-execution-loop">Rough sketch of service-execution loop:</a></h2>
+<pre><code class="language-rust ignore">*let execute = \Service @{init, update}. {
+    let ctx = proc! { ::core::service::new_context!() };
+    let Done result = for
+        init
+        (\sv. match (sv) {
+            Done _ =&gt; false,
+            _      =&gt; true,
+        })
+        (\sv. match (sv) {
+            Done _ =&gt; sv,
+            Continue st act wset =&gt; {
+                // submit action and watch-set, then wait for events / messages
+                let msg = proc! { ::core::service::perform!(ctx, act, wset) };
+                update st msg
+            },
+        })
+    ;
+    result
+};</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="tbd-async-computation-and-async-io"><a class="header" href="#tbd-async-computation-and-async-io">[T.B.D.] Async-Computation and Async I/O</a></h1>
 <p>An asynchronous <em>task</em> ≒ <em>VM instance</em>.<br>(The Phox VM itself is a state-machine based on <em>Suspendable Term Reduction Abstract Machine (STReAM)</em>)</p>
