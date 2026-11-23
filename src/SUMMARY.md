@@ -65,6 +65,7 @@
 - [\[PEND\] Structural Transparency of Types (STraT)](./STraT.md)
 - [STReAM / Phox VM (overview)](./phox_vm_en.md)
 - [STReAM / Phox VM (formal semantics)](./phox_vm_spec_en.md)
+- [Static Reference Analysis](./StaticReferenceAnalysis.md)
 - [Phox Type System]()
 <!-- - [Phox Type System (Future)](./typesys-future.md) -->
 
