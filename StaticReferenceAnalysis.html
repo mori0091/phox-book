@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2332c272.js";
+            window.path_to_searchindex_js = "searchindex-db4aadb6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-06099c2d.js"></script>
@@ -415,7 +415,7 @@ G_{E_0} \text{ is a DAG}
 <h3 id="82-alias-analysis"><a class="header" href="#82-alias-analysis">8.2 Alias analysis</a></h3>
 <p>We can obtain the Nodes reachable from a variable by filtering its reachable set:</p>
 <p>\[
-NodeReach_E(x) = Reach_E(x) \cap N_E
+NodeReach_E(x) = ({x}\cap N_E) \cup (Reach_E(x)\cap N_E)
 \]</p>
 <p>For an expression <code>e</code>, the reachable Nodes can be obtained from its direct roots:</p>
 <p>\[
