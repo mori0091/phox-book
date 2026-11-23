@@ -366,7 +366,7 @@ By enforcing `AssignSafe` on every reference assignment, the compiler can guaran
 We can obtain the Nodes reachable from a variable by filtering its reachable set:
 
 \\[
-NodeReach_E(x) = Reach_E(x) \\cap N_E
+NodeReach_E(x) = (\{x\}\\cap N_E) \\cup (Reach_E(x)\cap N_E)
 \\]
 
 For an expression `e`, the reachable Nodes can be obtained from its direct roots:
