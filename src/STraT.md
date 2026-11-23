@@ -1,4 +1,10 @@
-# [WIP] Structural Transparency of Types (STraT)
+# [PEND] Structural Transparency of Types (STraT)
+
+> [!Caution]
+> The following are previous concepts.  
+> These may not be implemented.  
+> However, they are scheduled to be incorporated into other concepts  
+> (in a modified and more refined form).
 
 *Structural Transparency of Types (STraT)* is an attribute of types.
 
