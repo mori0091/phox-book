@@ -1,30 +1,24 @@
 # 🦊 The Phox Programming Language
 
-Phox is a small functional programming language.
+Phox is a small functional programming language with:
+- **Hindley–Milner type inference**,
+- **algebraic data types**,
+- **pattern matching**,
+- **multi-parameter typeclasses (`trait`/`impl`)**,
+- **requires (trait-bounds) inference**,
+- **generic function template (`*let`)**,
+- **automatic type/trait resolution without type-annotation**,
+- **iterator / generator pipeline**,
+- Rust-like **module system**,
+- and more.
 
 It aims to be a simple yet expressive tool - your clever companion for exploring type theory and practical programming.
 
-## ✨ Features
-
-- **Hindley–Milner type inference**  
-  No need to annotate types in most cases.  
-  (Phox includes a minimal type-annotation syntax for expressions, used only when disambiguation is needed.)
-- **Algebraic data types (ADT)**  
-  Define expressive data structures with variants.
-- **Pattern matching**  
-  Concise and powerful destructuring.
-- **Newtype shorthand**  
-  Cleaner syntax for single-constructor wrapper types.
-- **First-class functions**  
-  Functions are values, operators are functions too.
-- **Generic function temlates**  
-  Non-first class / overloadable generic function templates.
-- **Multi-parameter typeclasses (`trait`/`impl`)**  
-  Define the relationship between multiple methods and multiple types.
-- **Trait record**  
-  Typeclasses (`trait`/`impl`) can be instansiated as a first-class record value, with a simple syntax.
-- **Module system**  
-  Rust like module / namespace definition.
-- **Simple syntax**  
-  Inspired by ML-family languages, with a focus on clarity.
+> [!NOTE]
+> Phox is still under active development.  
+> While most I/O primitives have not yet been implemented, but the following core features are already available:
+> - Type-level Unicode String Framework (`ScalarString`, UTF-8, etc.)
+> - Pretty-Printing Combinators
+> - Rich pure-functional core libraries (iter, array, fmt, ...)
+> - Experimental `print`, `println`, `eprint`, and `eprintln`
 

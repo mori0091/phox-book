@@ -1,6 +1,8 @@
 # The Phox Programming Language
 [🦊 The Phox Programming Language](./index.md)
 [🎶 Phox Design Principles](./design_principles.md)
+[🍀 Expression Purity in Phox](./expression_purity_in_phox.md)
+[✨ Features](./features.md)
 
 # 🚀 Getting Started
 - [Install Phox](./install.md)

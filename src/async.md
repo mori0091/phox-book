@@ -1,4 +1,10 @@
-# [T.B.D.] Async-Computation and Async I/O
+# [PEND] Async-Computation and Async I/O
+
+> [!Caution]
+> The following are previous concepts.  
+> These may not be implemented.  
+> However, they are scheduled to be incorporated into other concepts  
+> (in a modified and more refined form).
 
 An asynchronous *task* ≒ *VM instance*.  
 (The Phox VM itself is a state-machine based on *Suspendable Term Reduction Abstract Machine (STReAM)*)

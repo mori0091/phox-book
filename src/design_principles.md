@@ -1,4 +1,4 @@
-# Phox Design Principles
+# 🎶 Phox Design Principles
 
 > *See widely.  
 > Think deeply.  
