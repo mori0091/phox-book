@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b0619ef1.js";
+            window.path_to_searchindex_js = "searchindex-2332c272.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-7cb8c0c7.js"></script>
+        <script src="toc-06099c2d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -177,54 +177,149 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="tbd-reactive-programming"><a class="header" href="#tbd-reactive-programming">[T.B.D.] Reactive programming</a></h1>
-<h2 id="gui-applications"><a class="header" href="#gui-applications">GUI applications</a></h2>
-<p>(T.B.D.)</p>
+<ul>
+<li>
+<p>Reactive system (Event-driven / Reactive Programming)</p>
+<ul>
+<li>Reactive State-Machine</li>
+<li>Cannels and Capabilities</li>
+<li>User-defined events / messages</li>
+</ul>
+</li>
+<li>
+<p>Software Circuit</p>
+<ul>
+<li>Component := Context (ex. Output Portals) × Input Channel × StateMachine</li>
+<li>Circuit := Component Network</li>
+<li>Declarative Resource Constraints</li>
+<li>Application := Instantiate and Run Circuit under the declared resource constraints.</li>
+</ul>
+</li>
+</ul>
 <hr>
-<h2 id="headless-service-agents"><a class="header" href="#headless-service-agents">Headless Service Agents</a></h2>
-<pre><code class="language-rust ignore">// `st` : type of service's state
-// `ev` : type of events / messages
-// `a`  : type of resulting value
-// `Action ev`   : type of command request to the run-time system or other entities.
-// `WatchSet ev` : type of subscription for watching the run-time system or other entities.
-type ServiceST st ev a
-  = Continue st (Action ev) (WatchSet ev)
-  | Done a
-;
+<h2 id="channels-and-sendreceive-capabilities"><a class="header" href="#channels-and-sendreceive-capabilities">Channels and Send/Receive Capabilities</a></h2>
+<pre><code class="language-rust ignore">/// Communication channel with (re)configurable parameters
+/// (e.g. buffer size, back pressure, etc.)
+type Channel a = @{...};
 
-type Service st ev a = @{
-  /// `init` is called by the run-time system when the service is started.
-  init   : ServiceST st ev a,
-  /// `update` is called by the run-time system when a event occurred.
-  update : st -&gt; ev -&gt; ServiceST st ev a,
+/// Send/Receive capabilities.
+type SendCap a = SendCap (Channel a);
+type RecvCap a = RecvCap (Channel a);
+
+/// send : SendCap a -&gt; a -&gt; ()
+*let send = \sc.\msg. proc! {
+    send!(sc, msg)
 };
 
-/// Constructs service instance and execute it.
-///  serve : ServiceST st ev a -&gt; (st -&gt; ev -&gt; ServiceST st ev a) -&gt; a
-*let serve = \ini.\upd. {
-  let s = Service @{ init = ini, update = upd };
-  ::core::service:execute s
+/// recv : RecvCap a -&gt; a
+*let recv = \rc. proc! {
+    recv!(rc)
+};
+
+/// portal
+///   : SendCap (req, resp -&gt; ())
+///  -&gt; SendCap msg
+///  -&gt; (resp -&gt; msg)
+///  -&gt; req
+///  -&gt; ()
+*let portal = \sendreq.\sendmsg. {
+    let call_out  = send sendreq;
+    let call_back = send sendmsg;
+    (\toMsg.\req. call_out (req, call_back &lt;&lt; toMsg))
+};
+
+/// Receive Capability is an Iterator.
+impl Iter RecvCap a {
+    next = \inbox. Some (recv inbox, inbox);
 };</code></pre>
-<hr>
-<h2 id="rough-sketch-of-service-execution-loop"><a class="header" href="#rough-sketch-of-service-execution-loop">Rough sketch of service-execution loop:</a></h2>
-<pre><code class="language-rust ignore">*let execute = \Service @{init, update}. {
-    let ctx = proc! { ::core::service::new_context!() };
-    let Done result = for
-        init
-        (\sv. match (sv) {
-            Done _ =&gt; false,
-            _      =&gt; true,
-        })
-        (\sv. match (sv) {
-            Done _ =&gt; sv,
-            Continue st act wset =&gt; {
-                // submit action and watch-set, then wait for events / messages
-                let msg = proc! { ::core::service::perform!(ctx, act, wset) };
-                update st msg
-            },
-        })
+<h2 id="software-circuit"><a class="header" href="#software-circuit">Software Circuit</a></h2>
+<p><strong>Client-Server Example</strong>:</p>
+<pre><code class="language-rust ignore">// === Echo Server definition ===
+// (pseudo code)
+
+type EchoReq
+    = Echo ScalarString
+    | EchoBye
     ;
-    result
-};</code></pre>
+
+type EchoServer = EchoServer;
+
+impl Sink EchoServer (EchoReq, ScalarString -&gt; ()) () {
+    update = \self.\(req, replay). match (req) {
+        Echo s =&gt; {
+            reply s;
+            self
+        },
+        EchoBye =&gt; {
+            reply "Bye!";
+            self
+        },
+    };
+    finish = \self. ();
+};
+
+// === Echo Client definition ===
+// (pseudo code)
+
+type Msg
+    = OnReceived ScalarString
+    | ...
+    ;
+
+type EchoClient = @{
+    echo : EchoReq -&gt; (),
+};
+
+impl Sink EchoClient Msg () {
+    update = \self.\msg. match (msg) {
+        OnReceived s =&gt; {
+            println s;
+            self.echo EchoBye;
+            self
+        },
+    };
+    finish = \self. ();
+};
+
+// === Software Circuit definition ===
+let newSystem = \conf. {
+    // === channels ===
+    let @{s, c} = conf : @{
+        s : Channel (EchoReq, ScalarString -&gt; ()),
+        c : Channel Msg,
+    };
+
+    // === connections ===
+    let e = portal (SendCap s) (SendCap c) OnReceived;
+
+    // === entities ===
+    let server = EchoServer;
+    let client = EchoClient @{ echo = e };
+
+    // === tasks ===
+    // (Assume that `task expr` constructs a task abstraction)
+    @[
+        task {
+            collect server (RecvCap s)
+        },
+        task {
+            e (Echo "Hi!");
+            collect client (RecvCap c)
+        },
+    ]
+};
+
+// === Instantiate the circuit w/ configuration ===
+let system = newSystem @{
+    // === channels config./constraints ===
+    s = Channel @{...},
+    c = Channel @{...},
+    // === other config./constraints ===
+    // ...
+};
+
+// === Execute the circuit instance ===
+par system</code></pre>
 
                     </main>
 
