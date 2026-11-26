@@ -2,7 +2,7 @@
 
 - Reactive system (Event-driven / Reactive Programming)
   - Reactive State-Machine
-  - Cannels and Capabilities
+  - Channels and Capabilities
   - User-defined events / messages
 
 - Software Circuit
