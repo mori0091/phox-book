@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document describes a static analysis framework for tracking dependencies between values and references.
+Static Reference Analysis tracks dependencies between Nodes through references.
 
-The primary purpose is to establish a common foundation for several compiler analyses:
+Its primary purpose is to provide a common foundation for compiler analyses such as:
 
 - Circular reference detection
 - Alias analysis
@@ -12,429 +12,903 @@ The primary purpose is to establish a common foundation for several compiler ana
 - Job-to-Job reference sharing analysis
 - Escape and retention analysis
 
-The analysis is based on a dependency graph constructed from the relationships between variables and the values they represent.
+The analysis is based on a directed dependency graph of Nodes.
 
-The central concept is `Roots`, which describes the set of variables that the evaluation result of an expression directly depends on. Transitive dependencies are represented by `Reach`, which is derived from the dependency graph.
+The central concepts are:
 
-The analysis is intended to be performed after type inference and type checking. It is independent of the Hindley–Milner type system and type-class resolution.
+- `Roots`: the set of NodeIds directly referenced by a value or expression.
+- `Deps`: the direct dependencies of a Node.
+- `Reach`: the set of Nodes transitively reachable through those dependencies.
+- `Store`: the mapping from NodeIds to their statically represented contents.
 
-## 1. Value Categories and Environment
+The analysis is performed after type inference and type checking.  
+It does not evaluate expressions or inspect the runtime Heap or runtime addresses.
 
-We distinguish three categories of values.
+The analysis is intentionally conservative: if a dependency cannot be determined
+statically, the analysis may report it as unknown rather than attempting to
+evaluate the expression.
 
-### 1.1 Leaf
+## 1. Runtime Model
 
-A Leaf is an ordinary value, or a composite value consisting only of Leaf values.
+The runtime memory model provides the basis for understanding the relationships
+tracked by this analysis.
 
-A Leaf contains no references to Nodes.
+### 1.1 Runtime structures
 
-Examples include:
+The runtime Heap and environment are represented as:
 
-- Unit, Boolean, and numeric values
-- Tuples and records consisting only of Leaf values
-- Algebraic data type values consisting only of Leaf values
+```text
+Heap := Addr -> Term
+Env  := Vec<Addr>
+```
 
-### 1.2 Node
+A runtime term is one of:
 
-A Node is a composite value that may contain references to other Nodes.
+```text
+Term
+    := Val(Value)
+    | Clo(Code, Env)
+```
 
-Each Node has its own identity, represented by a variable.
+A value is one of:
 
-A Node may contain:
+```text
+Value
+    := Lit(Lit)
+    | Con { i1:Term, ..., iN:Term }
+    | Ref(Addr)
+```
 
-- Leaf values
-- References to Nodes
+A `Clo` contains the function code and the environment captured when the closure
+was created.
 
-### 1.3 Ref
+A `Ref(a)` refers to the runtime address `a` in the Heap.
 
-A Ref is a reference to a Node.
+A `Con` contains its fields directly as Terms. Its fields do not have
+independent runtime addresses merely by virtue of being fields.
 
-`Ref(x)` denotes a reference to the Node represented by variable `x`.
+### 1.2 Static and runtime representations
 
-### 1.4 Environment
+Static Reference Analysis does not use runtime `Addr` or inspect runtime `Heap`.
 
-An environment maps variables to their defining expressions.
+Instead, it introduces `NodeId` as a static identifier for a Node and `Store` as
+a static representation of Node contents.
 
-\\[
-E : Variable \\rightharpoonup Expr
-\\]
+The correspondence is conceptual:
 
-The set of variables representing Nodes is:
+| Runtime          | Static analysis                                      |
+|------------------|------------------------------------------------------|
+| `Addr`           | `NodeId`                                             |
+| `Heap`           | `Store`                                              |
+| `Ref(Addr)`      | `Ref(NodeId)`                                        |
+| `Clo(Code, Env)` | `Clo` with statically resolved captured dependencies |
 
-\\[
-N_E = \\{x \\in dom(E) \\mid E(x) \\text{ evaluates to a Node}\\}
-\\]
+A `NodeId` identifies a Node; it is not a runtime address.
 
-Variables may be bound to Leaf, Node, or Ref values.
+## 2. Node and Store
 
-The classification of expressions and variables is determined after type inference and type checking.
+### 2.1 NodeId
 
-## 2. Roots
+`NodeId` is a unique identifier assigned to each statically represented Node.
 
-We define `Roots(e)` as the set of variables that the evaluation result of expression `e` directly depends on.
+Its concrete representation is implementation-dependent.
 
-\\[
-Roots : Expr \\rightarrow \\mathcal{P}(Variable)
-\\]
+### 2.2 Node
 
-The definition is syntax-directed. It describes direct dependencies only and does not recursively expand variable bindings through the environment.
-
-### 2.1 Basic expressions
-
-For constants:
-
-\\[
-Roots(c) = \\varnothing
-\\]
-
-For variables:
-
-\\[
-Roots(x) = \\{x\\}
-\\]
-
-For references:
-
-\\[
-Roots(Ref(x)) = \\{x\\}
-\\]
-
-### 2.2 Composite values
-
-For a composite value consisting of expressions \\(e_1, \\ldots, e_n\\):
+A Node is represented as:
 
 \\[
-Roots(Node(e_1, \\ldots, e_n)) = \\bigcup_{i=1}^{n} Roots(e_i)
+Node(e,E)
 \\]
 
-The same principle applies to other composite values.
+where:
 
-A composite value consisting only of Leaf values has an empty root set.
+- \\(e\\) is the expression stored in the Node.
+- \\(E\\) is the environment used to resolve the variables occurring in \\(e\\).
 
-### 2.3 Conditional expressions
+The expression is not evaluated. The Node retains its expression and environment
+as static analysis information.
 
-For a conditional expression, only the possible result expressions contribute to `Roots`.
+The identity of a Node (`NodeId`) is independent of its contents.
+
+### 2.3 Store
+
+The static Store maps NodeIds to Nodes:
 
 \\[
-Roots(if\\ c\\ then\\ e_1\\ else\\ e_2) = Roots(e_1) \\cup Roots(e_2)
+Store : NodeId \rightarrow Node
 \\]
 
-The condition `c` is excluded.
+Updating a Node changes the contents associated with its NodeId, but does not
+change its identity.
 
 For example:
 
-```text
-z = if (x > y) a else b
-```
-
-The result may depend on either `a` or `b`, but does not retain `x` or `y` merely because they were used to evaluate the condition.
-
-Therefore:
-
 \\[
-Roots(E(z)) = Roots(a) \\cup Roots(b)
+Store' = Store[n \mapsto Node(e,E)]
 \\]
 
-### 2.4 Function expressions and closures
+replaces the contents of Node \\(n\\).
 
-For a function expression:
+## 3. Roots
+
+`Roots` describes the set of NodeIds directly referenced by a value.
 
 \\[
-Roots(\\lambda x.e) = FV(e) \\setminus \\{x\\}
+Roots : Value \rightarrow \mathcal{P}(NodeId)
 \\]
 
-Here, `FV(e)` denotes the free variables of `e`.
+### 3.1 Literals
 
-The free variables are captured by the closure and may therefore contribute to its dependencies.
-
-> [!NOTE]
-> `Roots` tracks dependencies of the evaluation result, not every variable accessed during evaluation. Dependencies used only to evaluate a conditional or another intermediate computation are not included. If temporary lifetimes or concurrent accesses during evaluation need to be analyzed, they should be handled by a separate analysis.
-
-### 2.5 Direct dependencies only
-
-Consider the following example:
-
-```text
-x = Node(...)
-y = Ref(x)
-z = Node(first = y, second = 20)
-```
-
-The direct roots are:
+A literal does not reference any Node:
 
 \\[
-Roots(E(x)) = \\varnothing
+Roots(Lit(l))=\varnothing
 \\]
 
+### 3.2 References
+
+A reference directly refers to its target Node:
+
 \\[
-Roots(E(y)) = \\{x\\}
+Roots(Ref(n))=\\{n\\}
 \\]
 
+### 3.3 Constructors
+
+For a constructor value:
+
 \\[
-Roots(E(z)) = \\{y\\}
+Roots(Con(v_1,\ldots,v_k)) = \bigcup_{i=1}^{k}Roots(v_i)
 \\]
 
-In particular, `Roots(E(z))` is `{y}`, not `{x, y}`.
+Only direct references contained in its fields are included.
 
-The dependency on `x` is obtained by following the dependency of `y`. This is the responsibility of `Reach`.
+### 3.4 Closures
 
-`Roots` can be computed and cached independently for each expression.
+A closure may retain references through its captured environment.
 
-## 3. Dependency Graph
-
-Using `Roots`, we construct a directed dependency graph for an environment.
+For a closure:
 
 \\[
-G_E = (V_E, A_E)
+Clo(\lambda x.e,E)
+\\]
+
+its roots are determined by the free variables of the function:
+
+\\[
+Roots(Clo(\lambda x.e,E)) = \bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
 \\]
 
 where:
 
 \\[
-V_E = dom(E)
+FV(\lambda x.e)=FV(e)\setminus\\{x\\}
 \\]
+
+The function body is not evaluated. Only its free variables and their captured
+values are considered.
+
+## 4. Roots_E
+
+`Roots_E(e)` describes the set of NodeIds directly referenced by expression
+\\(e\\) under environment \\(E\\).
 
 \\[
-A_E = \\{(x,y) \\mid x \\in V_E \\land y \\in Roots(E(x))\\}
+Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
 \\]
 
-An edge \\(x \\rightarrow y\\) means that the value defined by `x` directly depends on the value represented by `y`.
+Unlike `Reach`, `Roots_E` does not recursively traverse the Store.
 
-The graph includes variables bound to Leaf, Node, and Ref values. Paths may therefore pass through variables bound to Ref values.
+### 4.1 Variables
 
-For the previous example, the graph contains:
+A variable refers to the value bound to it in the environment:
 
-```text
-z -> y -> x
+\\[
+Roots_E(x)=Roots(E(x))
+\\]
+
+### 4.2 Literals
+
+A literal has no direct references:
+
+\\[
+Roots_E(Lit(l))=\varnothing
+\\]
+
+### 4.3 Constructors
+
+For a constructor expression:
+
+\\[
+Roots_E(Con(e_1,\ldots,e_k)) = \bigcup_{i=1}^{k}Roots_E(e_i)
+\\]
+
+The resulting constructor value contains the values of its fields, so its direct
+references are the union of the references in those fields.
+
+### 4.4 Function expressions
+
+Evaluating a lambda expression creates a closure that captures its free
+variables.
+
+Therefore:
+
+\\[
+Roots_E(\lambda x.e) = Roots(Clo(\lambda x.e,E))
+\\]
+
+Equivalently:
+
+\\[
+Roots_E(\lambda x.e) = \bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
+\\]
+
+The function body is not evaluated when calculating its roots.
+
+### 4.5 Function application
+
+For a function application:
+
+\\[
+Roots_E(e_1\ e_2) = Roots_E(e_1)\cup Roots_E(e_2)
+\\]
+
+Both the function expression and the argument expression may contribute
+references to the resulting value.
+
+This rule is conservative: it includes direct dependencies from both expressions
+without evaluating the application.
+
+### 4.6 Let expressions
+
+A let expression:
+
+\\[
+let\ x=e_1\ in\ e_2
+\\]
+
+is equivalent to function application:
+
+\\[
+(\lambda x.e_2)\ e_1
+\\]
+
+Therefore, no separate `Roots_E` rule is required.
+
+Its roots are determined by the function application and lambda rules.
+
+### 4.7 Conditional expressions
+
+For a conditional expression:
+
+\\[
+if\ e_1\ then\ e_2\ else\ e_3
+\\]
+
+the roots include the condition and both possible result expressions:
+
+\\[
+Roots_E(if\ e_1\ then\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
+\\]
+
+The condition is included because it is evaluated as part of evaluating the
+conditional expression.
+
+Both branches are included because either branch may produce the result.
+
+### 4.8 Match expressions
+
+A match expression is handled in the same way as a conditional expression.
+
+Its roots include:
+
+- The scrutinee expression.
+- Every possible branch expression.
+
+Pattern-bound variables are resolved in the corresponding branch environment.
+
+### 4.9 Direct dependencies only
+
+Consider:
+
+```phox
+let x = new 10;
+let y = new (Some x);
+let z = Some y;
 ```
 
-This representation distinguishes direct dependencies from transitive dependencies.
+Suppose the corresponding NodeIds are \\(n_x\\) and \\(n_y\\).
 
-## 4. Reach
-
-`Reach` represents transitive reachability in the dependency graph.
-
-First, define the direct dependencies of a variable:
+The direct roots of the values are:
 
 \\[
-Deps_E(x) = Roots(E(x))
-\\]
-
-Then define reachability recursively:
-
-\\[
-Reach_E^{(1)}(x) = Deps_E(x)
+Roots(Ref(n_x))=\\{n_x\\}
 \\]
 
 \\[
-Reach_E^{(k+1)}(x) = \\bigcup_{y \\in Reach_E^{(k)}(x)} Deps_E(y)
+Roots(Ref(n_y))=\\{n_y\\}
 \\]
 
-The complete reachable set is:
+The expression `Some y` has:
 
 \\[
-Reach_E(x) = \\bigcup_{k=1}^{\\infty} Reach_E^{(k)}(x)
+Roots_E(Some\ y)=\\{n_y\\}
 \\]
 
-\\(Reach_E(x)\\) contains all variables reachable from `x` by following one or more dependency edges.
+It does not directly contain \\(n_x\\).
 
-It is not reflexive: `x` is not included unless a cycle leads back to `x`.
+The dependency on \\(n_x\\) is obtained by following the dependency of \\(n_y\\).  
+This is the responsibility of `Reach`.
 
-For the example:
+## 5. Expression Semantics
 
-```text
-x = Node(...)
-y = Ref(x)
-z = Node(first = y, second = 20)
+This section describes the meaning of each expression form relevant to Static
+Reference Analysis.
+
+The runtime semantics below describe how expressions affect the runtime Heap and
+environment. The static rules describe how their reference dependencies are
+represented.
+
+### 5.1 Variable
+
+```phox
+x
 ```
 
-we obtain:
+A variable evaluates to the Term bound to it in the current environment.
+
+Its static roots are:
 
 \\[
-Reach_E(x) = \\varnothing
+Roots_E(x)=Roots(E(x))
 \\]
 
-\\[
-Reach_E(y) = \\{x\\}
-\\]
+### 5.2 Lambda expression
 
-\\[
-Reach_E(z) = \\{y,x\\}
-\\]
-
-Thus, `Roots` describes direct dependencies, while `Reach` describes transitive dependencies.
-
-## 5. Safe Reference Assignment
-
-Consider an assignment that stores a reference into a Node:
-
-```text
-n[i] = Ref(r)
+```phox
+λx.e
 ```
 
-This introduces a dependency edge:
+A lambda expression evaluates to a closure containing:
 
-```text
-n -> r
+- The function code \\(\lambda x.e\\).
+- The environment captured at closure creation.
+
+Its static roots are the roots of the captured free variables:
+
+\\[
+Roots_E(\lambda x.e)=\bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
+\\]
+
+The body is not evaluated at closure creation.
+
+### 5.3 Function application
+
+```phox
+e_1 e_2
 ```
 
-To preserve an acyclic dependency graph, the assignment must not introduce a path from `r` back to `n`.
+A function application evaluates the function expression and argument
+expression, then applies the resulting function to the argument.
 
-Therefore, the assignment is safe if:
+For a closure, the function body is evaluated in the captured environment
+extended with the argument binding.
 
-\\[
-n \\notin Reach_E(r)
-\\]
-
-We define the corresponding constraint:
+Its static roots are:
 
 \\[
-AssignSafe(n[i] \\leftarrow Ref(r)) \\iff n \\notin Reach_E(r)
+Roots_E(e_1\ e_2)=Roots_E(e_1)\cup Roots_E(e_2)
 \\]
 
-### 5.1 Replacing an existing reference
+### 5.4 Let expression
 
-When an existing reference is overwritten, its old dependency edge must be removed before checking the new assignment.
+```phox
+let x = e_1 in e_2
+```
 
-Otherwise, a valid replacement might be incorrectly rejected because the old edge still contributes to the reachability relation.
+A let expression evaluates \\(e_1\\), binds the resulting value to \\(x\\), and
+evaluates \\(e_2\\) in the extended environment.
 
-Let \\(E^-\\) denote the environment or dependency graph after removing the old reference edge(s).
+It is equivalent to:
 
-The correct condition is:
+```phox
+(λx.e_2) e_1
+```
+
+Consequently, its static dependencies are determined by the rules for lambda
+expressions and function application.
+
+### 5.5 Conditional expression
+
+```phox
+if e_1 then e_2 else e_3
+```
+
+A conditional evaluates its condition \\(e_1\\), then evaluates the selected branch.
+
+Its static roots include all three expressions:
 
 \\[
-AssignSafe(n[i] \\leftarrow Ref(r)) \\iff n \\notin Reach_{E^-}(r)
+Roots_E(if\ e_1\ then\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
 \\]
 
-The new edge \\(n \\rightarrow r\\) is added only after this condition has been verified.
+The analysis does not attempt to determine which branch will execute.
 
-## 6. Acyclicity Invariant
+### 5.6 Literal expression
 
-Assume that the initial dependency graph is acyclic:
+```phox
+10
+```
+
+A literal evaluates to a literal value:
 
 \\[
-G_{E_0} \\text{ is a DAG}
+Roots_E(Lit(l))=\varnothing
 \\]
 
-Every subsequent reference assignment is required to satisfy `AssignSafe`.
+### 5.7 Constructor expression
 
-Adding an edge \\(n \\rightarrow r\\) creates a cycle if and only if a path from `r` to `n` already exists.
+```phox
+Con(e_1, ..., e_k)
+```
 
-Since `AssignSafe` rejects exactly this case, every permitted assignment preserves acyclicity.
+A constructor expression evaluates its field expressions and constructs a value
+containing the resulting Terms.
 
-Consequently, by induction:
+Its static roots are:
 
 \\[
-\\forall t,\\quad G_{E_t} \\text{ is a DAG}
+Roots_E(Con(e_1,\ldots,e_k))=\bigcup_{i=1}^{k}Roots_E(e_i)
 \\]
 
-This gives a static guarantee that the dependency graph contains no cycles, provided that all operations capable of introducing reference edges are subject to this constraint.
+### 5.8 Allocation expression
 
-## 7. Cached Analysis Information
+```phox
+new e
+```
 
-The analysis can cache the following information:
+An allocation expression evaluates \\(e\\), allocates a new runtime address,
+stores the resulting Term at that address, and returns a reference to it.
 
-| Information      | Definition       | Purpose                              |
-|------------------|------------------|--------------------------------------|
-| Roots            | \\(Roots(e)\\)   | Direct syntactic dependencies        |
-| Deps             | \\(Deps_E(x)\\)  | Direct dependencies of a variable    |
-| Reach            | \\(Reach_E(x)\\) | Transitive dependencies              |
-| Dependency graph | \\(G_E\\)        | Graph representation of dependencies |
-
-`Roots` is computed per expression and can be reused.
-
-`Reach` can be computed on demand, particularly when validating reference assignments. Depending on the implementation, it may also be cached and incrementally updated.
-
-The distinction is important:
-
-- `Roots` is a local, syntax-directed property of an expression.
-- `Reach` is a transitive property derived from the dependency graph.
-- The dependency graph provides a common representation that can be reused by multiple analyses.
-
-## 8. Applications
-
-The dependency graph provides a common foundation for several analyses.
-
-### 8.1 Circular reference detection
-
-A cycle in the dependency graph indicates a circular dependency.
-
-By enforcing `AssignSafe` on every reference assignment, the compiler can guarantee that such cycles are never created.
-
-### 8.2 Alias analysis
-
-We can obtain the Nodes reachable from a variable by filtering its reachable set:
+Conceptually:
 
 \\[
-NodeReach_E(x) = (\{x\}\\cap N_E) \\cup (Reach_E(x)\cap N_E)
+\frac{
+\begin{aligned}
+&\langle e,E,Heap\rangle
+\Downarrow
+\langle t,Heap_1\rangle\\
+&a\ \text{fresh}\\
+&\\
+&Heap_2=Heap_1[a\mapsto t]
+\end{aligned}
+}{
+\langle new\ e,E,Heap\rangle
+\Downarrow
+\langle Ref(a),Heap_2\rangle
+}
 \\]
 
-For an expression `e`, the reachable Nodes can be obtained from its direct roots:
+For static analysis, allocation creates a fresh NodeId \\(n\\) and adds a Node
+to the Store:
 
 \\[
-NodeReach_E(e) = \\bigcup_{x \\in Roots(e)} NodeReach_E(x)
+\frac{
+n\ \text{fresh}
+\qquad
+Store'=Store[n\mapsto Node(e,E)]
+}{
+\langle new\ e,E,Store\rangle
+\longrightarrow
+\langle Ref(n),Store'\rangle
+}
 \\]
 
-If two values have intersecting reachable Node sets, they may refer to a common Node:
+Therefore:
 
 \\[
-NodeReach_E(a) \\cap NodeReach_E(b) \\neq \\varnothing
+Roots_E(new\ e)=\\{n\\}
 \\]
 
-This provides a basis for alias analysis.
+The references contained in \\(e\\) are not directly included in the roots of
+the allocation expression. They become dependencies of the newly created Node
+and are obtained through `Deps` and `Reach`.
 
-More precise may-alias and must-alias analyses can be built on top of this information.
+Allocation itself does not introduce a dependency from an existing Node to the
+new Node. Since \\(n\\) is fresh, no existing Node can already depend on it.
+Therefore, allocation does not require a circular reference check.
 
-### 8.3 Reuse analysis
+### 5.9 Reference assignment
 
-When considering whether a Node can be reused for an in-place update, we need to determine whether another live value can observe its current contents.
+```phox
+r <- e
+```
 
-The dependency graph provides the reference and alias information needed for this analysis.
+A reference assignment evaluates the left-hand side to identify the target
+reference, evaluates the right-hand side, and replaces the contents stored at
+the target address.
 
-Combined with liveness analysis and mutation information, it can help determine whether a Node is safe to reuse.
+If the left-hand side resolves to `Ref(a)`, the runtime Heap is updated:
 
-In particular, the analysis needs to distinguish between:
+\\[
+Heap'=Heap[a\mapsto t]
+\\]
+
+where \\(t\\) is the evaluated right-hand side.
+
+For static analysis, if the left-hand side resolves to `Ref(n)`, the NodeId
+remains unchanged. Only its contents in the Store are replaced:
+
+\\[
+Store'=Store[n\mapsto Node(e,E)]
+\\]
+
+The assignment is permitted only if it does not introduce a circular dependency.
+The precise condition is defined in Section 8.
+
+The right-hand side is represented by its expression and environment in the
+updated Node. It is not evaluated by Static Reference Analysis.
+
+## 6. Node Dependencies
+
+The direct dependencies of a Node are determined by the roots of its contents.
+
+First, define the roots of a Node:
+
+\\[
+Roots(Node(e,E)):=Roots_E(e)
+\\]
+
+Then define the direct dependencies of Node \\(n\\):
+
+\\[
+Deps_{Store}(n):=Roots(Store(n))
+\\]
+
+Therefore, if:
+
+\\[
+Store(n)=Node(e,E)
+\\]
+
+then:
+
+\\[
+Deps_{Store}(n)=Roots_E(e)
+\\]
+
+A directed edge:
+
+\\[
+n\rightarrow m
+\\]
+
+exists exactly when:
+
+\\[
+m\in Deps_{Store}(n)
+\\]
+
+This edge means that the contents of Node \\(n\\) directly reference Node \\(m\\).
+
+For example:
+
+```phox
+let x = new Nil;
+let y = new (Cons 10 x);
+let z = new (Cons 20 y);
+```
+
+Let the corresponding NodeIds be \\(n_x,n_y,n_z\\).
+
+The Store contains:
+
+\\[
+Store(n_x)=Node(Nil,E)
+\\]
+
+\\[
+Store(n_y)=Node(Cons(10,x),E)
+\\]
+
+\\[
+Store(n_z)=Node(Cons(20,y),E)
+\\]
+
+The direct dependencies are:
+
+\\[
+Deps_{Store}(n_x)=\varnothing
+\\]
+
+\\[
+Deps_{Store}(n_y)=\\{n_x\\}
+\\]
+
+\\[
+Deps_{Store}(n_z)=\\{n_y\\}
+\\]
+
+Thus, the dependency graph is:
+
+```text
+n_z -> n_y -> n_x
+```
+
+## 7. Reach
+
+`Reach` represents transitive reachability through the Node dependency graph.
+
+For a NodeId \\(n\\), define:
+
+\\[
+Reach(Store,n) = \\{n\\} \cup \bigcup_{m\in Deps_{Store}(n)} Reach(Store,m)
+\\]
+
+For a set of NodeIds \\(S\\), define:
+
+\\[
+Reach(Store,S) = \bigcup_{n\in S}Reach(Store,n)
+\\]
+
+Unlike `Roots`, `Reach` includes the starting Node itself.
+
+For the previous example:
+
+\\[
+Reach(Store,n_x)=\\{n_x\\}
+\\]
+
+\\[
+Reach(Store,n_y)=\\{n_y,n_x\\}
+\\]
+
+\\[
+Reach(Store,n_z)=\\{n_z,n_y,n_x\\}
+\\]
+
+Thus:
+
+- `Roots_E` describes direct references from an expression.
+- `Deps` describes direct references from a Node.
+- `Reach` describes all Nodes reachable through those references.
+
+The Store is maintained as an acyclic graph. Therefore, the recursive definition
+of `Reach` does not need to handle existing cycles.
+
+## 8. Circular Reference Detection
+
+Circular references are prevented by checking assignments that modify existing
+Nodes.
+
+### 8.1 Assignment condition
+
+Suppose the left-hand side of an assignment resolves to:
+
+\\[
+Ref(n)
+\\]
+
+and the right-hand side is \\(e\\), evaluated in environment \\(E\\).
+
+The assignment would replace the contents of Node \\(n\\) with:
+
+\\[
+Node(e,E)
+\\]
+
+The direct dependencies introduced by this replacement are:
+
+\\[
+Roots_E(e)
+\\]
+
+A circular dependency is introduced exactly when one of these dependencies can
+already reach \\(n\\) through the current Store.
+
+Therefore, the assignment is permitted if and only if:
+
+\\[
+\boxed{
+n\notin Reach(Store,Roots_E(e))
+}
+\\]
+
+If this condition holds, update the Store:
+
+\\[
+Store'=Store[n\mapsto Node(e,E)]
+\\]
+
+Otherwise, reject the assignment.
+
+The check is performed against the Store **before** the assignment.
+
+### 8.2 Example
+
+Consider:
+
+```phox
+let x = new Nil;
+let y = new (Cons 10 x);
+let z = new (Cons 20 y);
+
+x <- Cons 30 z;
+```
+
+Assume the NodeIds are \\(n_1,n_2,n_3\\), respectively.
+
+Before the assignment:
+
+\\[
+Store(n_1)=Node(Nil,E)
+\\]
+
+\\[
+Store(n_2)=Node(Cons(10,x),E)
+\\]
+
+\\[
+Store(n_3)=Node(Cons(20,y),E)
+\\]
+
+The existing dependency graph is:
+
+```text
+n_3 -> n_2 -> n_1
+```
+
+The assignment:
+
+```phox
+x <- Cons 30 z
+```
+
+would replace the contents of \\(n_1\\) with:
+
+\\[
+Node(Cons(30,z),E)
+\\]
+
+The right-hand side has:
+
+\\[
+Roots_E(Cons(30,z))=\\{n_3\\}
+\\]
+
+Following the existing dependencies:
+
+\\[
+Reach(Store,\\{n_3\\})=\\{n_3,n_2,n_1\\}
+\\]
+
+Therefore:
+
+\\[
+n_1\in Reach(Store,\\{n_3\\})
+\\]
+
+The assignment is rejected because it would introduce the cycle:
+
+```text
+n_1 -> n_3 -> n_2 -> n_1
+```
+
+### 8.3 Acyclicity invariant
+
+Assume that the initial Store is acyclic:
+
+\\[
+Store_0\text{ is acyclic}
+\\]
+
+Allocation creates a fresh Node and cannot introduce an edge from an existing
+Node to that new Node.
+
+Every assignment is checked using the condition in Section 8.1.
+
+Replacing the contents of Node \\(n\\) introduces a cycle if and only if one of
+the new direct dependencies can already reach \\(n\\).
+
+The assignment condition rejects exactly this case.
+
+Consequently, by induction, every permitted operation preserves the acyclicity
+of the Store:
+
+\\[
+\boxed{
+\forall t,\quad Store_t\text{ is acyclic}
+}
+\\]
+
+This guarantee assumes that every operation capable of introducing or changing
+Node dependencies is subject to the corresponding check.
+
+## 9. Applications
+
+The dependency graph provides a common foundation for further compiler analyses.
+
+### 9.1 Alias analysis
+
+The Nodes reachable from an expression can be obtained from its roots:
+
+\\[
+NodeReach_E(e)=Reach(Store,Roots_E(e))
+\\]
+
+If two expressions have intersecting reachable Node sets:
+
+\\[
+NodeReach_E(e_1)\cap NodeReach_E(e_2)\neq\varnothing
+\\]
+
+they may refer to a common Node.
+
+This provides a basis for may-alias analysis.
+
+More precise may-alias and must-alias analyses can be built on top of this
+information.
+
+### 9.2 Reuse analysis
+
+To determine whether a Node can be reused for an in-place update, the compiler
+needs to know whether another live value can observe its contents.
+
+The dependency graph provides the reference and alias information required for
+this analysis.
+
+Combined with liveness and mutation information, it can help distinguish between:
 
 - Nodes reachable only from the value being updated.
 - Nodes that may also be reachable from other live values.
 
-The latter cannot be modified in place without considering the effects on those other values.
+The latter cannot be modified in place without considering the effects on those
+other values.
 
-### 8.4 Job-to-Job sharing analysis
+### 9.3 Job-to-Job reference sharing analysis
 
-For concurrent execution, we can calculate the Nodes reachable from values captured or retained by each Job.
+For concurrent execution, the Nodes reachable from values captured or retained
+by each Job can be calculated.
 
-For two Jobs, `A` and `B`, define:
+For two Jobs \\(A\\) and \\(B\\), define:
 
 \\[
-SharedNodes(A,B) = NodeReach_E(A) \\cap NodeReach_E(B)
+SharedNodes(A,B) = NodeReach_E(A)\cap NodeReach_E(B)
 \\]
 
 If this set is non-empty, the Jobs may share Nodes.
 
-Combining this information with access modes (read-only or mutable) can help determine whether synchronization is necessary.
+Combining this information with access modes, such as read-only and mutable
+access, can help determine whether synchronization is necessary.
 
-This analysis can be extended to account for values retained by Channels and other runtime structures.
+The analysis can be extended to include values retained by Channels and other
+runtime structures.
 
-### 8.5 Escape and retention analysis
+### 9.4 Escape and retention analysis
 
-The same reachability information can also be used to analyze whether a Node escapes a particular scope or Job, and which values may keep it alive.
+The same reachability information can be used to determine whether a Node
+escapes a particular scope or Job, and which values may retain references to it.
 
 This can provide useful information for memory management and lifetime analysis.
 
-## 9. Compiler Pipeline
+## 10. Compiler Pipeline
 
-The analysis is independent of type inference and type-class resolution.
+Static Reference Analysis is performed after successful type inference and type
+checking.
 
 A possible compiler pipeline is:
 
 1. Parse source code.
 2. Perform type inference and type checking.
-3. Classify expressions and variables for reference analysis.
-4. Calculate and cache `Roots`.
-5. Construct the dependency graph.
-6. Generate and validate `AssignSafe` constraints.
-7. Perform further analyses such as alias analysis, reuse analysis, and Job-to-Job sharing analysis.
+3. Construct the static environments and initial Store.
+4. Calculate and cache `Roots_E` for expressions.
+5. Calculate `Deps` for Nodes.
+6. Construct or query the dependency graph.
+7. Validate assignments using the circular reference condition.
+8. Perform further analyses such as alias analysis, reuse analysis, and Job-to-Job sharing analysis.
 
-By running reference analysis only after successful type checking, it can remain largely orthogonal to the Hindley–Milner type system and MPTC resolution.
+The analysis is independent of the Hindley–Milner type system and type-class
+resolution, except that it assumes expressions have already passed type
+checking.
 
