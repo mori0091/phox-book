@@ -200,6 +200,15 @@ Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
 
 Unlike `Reach`, `Roots_E` does not recursively traverse the Store.
 
+> [!NOTE]
+> The expressions `new e` and `r <- e` update the Store.  
+> Therefore, more precisely, \\(Roots_E\\) takes the following form:
+> 
+> \\[
+> Roots_E : Expr \times Environment \times Store \rightarrow \mathcal{P}(NodeId) \times Store
+> \\]
+
+
 ### 4.1 Variables
 
 A variable refers to the value bound to it in the environment:
