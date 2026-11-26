@@ -201,8 +201,9 @@ Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
 Unlike `Reach`, `Roots_E` does not recursively traverse the Store.
 
 > [!NOTE]
-> The expressions `new e` and `r <- e` update the Store.  
-> Therefore, more precisely, \\(Roots_E\\) takes the following form:
+> The definition above describes the basic form of \\(Roots_E\\).  
+> Since the expressions `new e` and `r <- e` also update the Store,  
+> the complete form of \\(Roots_E\\), including Store updates, is:
 > 
 > \\[
 > Roots_E : Expr \times Environment \times Store \rightarrow \mathcal{P}(NodeId) \times Store
