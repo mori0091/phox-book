@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-db4aadb6.js";
+            window.path_to_searchindex_js = "searchindex-e14f2fe7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-06099c2d.js"></script>
@@ -178,8 +178,8 @@
                     <main>
                         <h1 id="tbc-static-reference-analysis"><a class="header" href="#tbc-static-reference-analysis">[T.B.C.] Static Reference Analysis</a></h1>
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
-<p>This document describes a static analysis framework for tracking dependencies between values and references.</p>
-<p>The primary purpose is to establish a common foundation for several compiler analyses:</p>
+<p>Static Reference Analysis tracks dependencies between Nodes through references.</p>
+<p>Its primary purpose is to provide a common foundation for compiler analyses such as:</p>
 <ul>
 <li>Circular reference detection</li>
 <li>Alias analysis</li>
@@ -187,281 +187,601 @@
 <li>Job-to-Job reference sharing analysis</li>
 <li>Escape and retention analysis</li>
 </ul>
-<p>The analysis is based on a dependency graph constructed from the relationships between variables and the values they represent.</p>
-<p>The central concept is <code>Roots</code>, which describes the set of variables that the evaluation result of an expression directly depends on. Transitive dependencies are represented by <code>Reach</code>, which is derived from the dependency graph.</p>
-<p>The analysis is intended to be performed after type inference and type checking. It is independent of the Hindley–Milner type system and type-class resolution.</p>
-<h2 id="1-value-categories-and-environment"><a class="header" href="#1-value-categories-and-environment">1. Value Categories and Environment</a></h2>
-<p>We distinguish three categories of values.</p>
-<h3 id="11-leaf"><a class="header" href="#11-leaf">1.1 Leaf</a></h3>
-<p>A Leaf is an ordinary value, or a composite value consisting only of Leaf values.</p>
-<p>A Leaf contains no references to Nodes.</p>
-<p>Examples include:</p>
+<p>The analysis is based on a directed dependency graph of Nodes.</p>
+<p>The central concepts are:</p>
 <ul>
-<li>Unit, Boolean, and numeric values</li>
-<li>Tuples and records consisting only of Leaf values</li>
-<li>Algebraic data type values consisting only of Leaf values</li>
+<li><code>Roots</code>: the set of NodeIds directly referenced by a value or expression.</li>
+<li><code>Deps</code>: the direct dependencies of a Node.</li>
+<li><code>Reach</code>: the set of Nodes transitively reachable through those dependencies.</li>
+<li><code>Store</code>: the mapping from NodeIds to their statically represented contents.</li>
 </ul>
-<h3 id="12-node"><a class="header" href="#12-node">1.2 Node</a></h3>
-<p>A Node is a composite value that may contain references to other Nodes.</p>
-<p>Each Node has its own identity, represented by a variable.</p>
-<p>A Node may contain:</p>
-<ul>
-<li>Leaf values</li>
-<li>References to Nodes</li>
-</ul>
-<h3 id="13-ref"><a class="header" href="#13-ref">1.3 Ref</a></h3>
-<p>A Ref is a reference to a Node.</p>
-<p><code>Ref(x)</code> denotes a reference to the Node represented by variable <code>x</code>.</p>
-<h3 id="14-environment"><a class="header" href="#14-environment">1.4 Environment</a></h3>
-<p>An environment maps variables to their defining expressions.</p>
-<p>\[
-E : Variable \rightharpoonup Expr
-\]</p>
-<p>The set of variables representing Nodes is:</p>
-<p>\[
-N_E = \{x \in dom(E) \mid E(x) \text{ evaluates to a Node}\}
-\]</p>
-<p>Variables may be bound to Leaf, Node, or Ref values.</p>
-<p>The classification of expressions and variables is determined after type inference and type checking.</p>
-<h2 id="2-roots"><a class="header" href="#2-roots">2. Roots</a></h2>
-<p>We define <code>Roots(e)</code> as the set of variables that the evaluation result of expression <code>e</code> directly depends on.</p>
-<p>\[
-Roots : Expr \rightarrow \mathcal{P}(Variable)
-\]</p>
-<p>The definition is syntax-directed. It describes direct dependencies only and does not recursively expand variable bindings through the environment.</p>
-<h3 id="21-basic-expressions"><a class="header" href="#21-basic-expressions">2.1 Basic expressions</a></h3>
-<p>For constants:</p>
-<p>\[
-Roots(c) = \varnothing
-\]</p>
-<p>For variables:</p>
-<p>\[
-Roots(x) = \{x\}
-\]</p>
-<p>For references:</p>
-<p>\[
-Roots(Ref(x)) = \{x\}
-\]</p>
-<h3 id="22-composite-values"><a class="header" href="#22-composite-values">2.2 Composite values</a></h3>
-<p>For a composite value consisting of expressions \(e_1, \ldots, e_n\):</p>
-<p>\[
-Roots(Node(e_1, \ldots, e_n)) = \bigcup_{i=1}^{n} Roots(e_i)
-\]</p>
-<p>The same principle applies to other composite values.</p>
-<p>A composite value consisting only of Leaf values has an empty root set.</p>
-<h3 id="23-conditional-expressions"><a class="header" href="#23-conditional-expressions">2.3 Conditional expressions</a></h3>
-<p>For a conditional expression, only the possible result expressions contribute to <code>Roots</code>.</p>
-<p>\[
-Roots(if\ c\ then\ e_1\ else\ e_2) = Roots(e_1) \cup Roots(e_2)
-\]</p>
-<p>The condition <code>c</code> is excluded.</p>
-<p>For example:</p>
-<pre><code class="language-text">z = if (x &gt; y) a else b
+<p>The analysis is performed after type inference and type checking.<br>It does not evaluate expressions or inspect the runtime Heap or runtime addresses.</p>
+<p>The analysis is intentionally conservative: if a dependency cannot be determined
+statically, the analysis may report it as unknown rather than attempting to
+evaluate the expression.</p>
+<h2 id="1-runtime-model"><a class="header" href="#1-runtime-model">1. Runtime Model</a></h2>
+<p>The runtime memory model provides the basis for understanding the relationships
+tracked by this analysis.</p>
+<h3 id="11-runtime-structures"><a class="header" href="#11-runtime-structures">1.1 Runtime structures</a></h3>
+<p>The runtime Heap and environment are represented as:</p>
+<pre><code class="language-text">Heap := Addr -&gt; Term
+Env  := Vec&lt;Addr&gt;
 </code></pre>
-<p>The result may depend on either <code>a</code> or <code>b</code>, but does not retain <code>x</code> or <code>y</code> merely because they were used to evaluate the condition.</p>
-<p>Therefore:</p>
-<p>\[
-Roots(E(z)) = Roots(a) \cup Roots(b)
-\]</p>
-<h3 id="24-function-expressions-and-closures"><a class="header" href="#24-function-expressions-and-closures">2.4 Function expressions and closures</a></h3>
-<p>For a function expression:</p>
-<p>\[
-Roots(\lambda x.e) = FV(e) \setminus \{x\}
-\]</p>
-<p>Here, <code>FV(e)</code> denotes the free variables of <code>e</code>.</p>
-<p>The free variables are captured by the closure and may therefore contribute to its dependencies.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p><code>Roots</code> tracks dependencies of the evaluation result, not every variable accessed during evaluation. Dependencies used only to evaluate a conditional or another intermediate computation are not included. If temporary lifetimes or concurrent accesses during evaluation need to be analyzed, they should be handled by a separate analysis.</p>
-</blockquote>
-<h3 id="25-direct-dependencies-only"><a class="header" href="#25-direct-dependencies-only">2.5 Direct dependencies only</a></h3>
-<p>Consider the following example:</p>
-<pre><code class="language-text">x = Node(...)
-y = Ref(x)
-z = Node(first = y, second = 20)
+<p>A runtime term is one of:</p>
+<pre><code class="language-text">Term
+    := Val(Value)
+    | Clo(Code, Env)
 </code></pre>
-<p>The direct roots are:</p>
-<p>\[
-Roots(E(x)) = \varnothing
-\]</p>
-<p>\[
-Roots(E(y)) = \{x\}
-\]</p>
-<p>\[
-Roots(E(z)) = \{y\}
-\]</p>
-<p>In particular, <code>Roots(E(z))</code> is <code>{y}</code>, not <code>{x, y}</code>.</p>
-<p>The dependency on <code>x</code> is obtained by following the dependency of <code>y</code>. This is the responsibility of <code>Reach</code>.</p>
-<p><code>Roots</code> can be computed and cached independently for each expression.</p>
-<h2 id="3-dependency-graph"><a class="header" href="#3-dependency-graph">3. Dependency Graph</a></h2>
-<p>Using <code>Roots</code>, we construct a directed dependency graph for an environment.</p>
-<p>\[
-G_E = (V_E, A_E)
-\]</p>
-<p>where:</p>
-<p>\[
-V_E = dom(E)
-\]</p>
-<p>\[
-A_E = \{(x,y) \mid x \in V_E \land y \in Roots(E(x))\}
-\]</p>
-<p>An edge \(x \rightarrow y\) means that the value defined by <code>x</code> directly depends on the value represented by <code>y</code>.</p>
-<p>The graph includes variables bound to Leaf, Node, and Ref values. Paths may therefore pass through variables bound to Ref values.</p>
-<p>For the previous example, the graph contains:</p>
-<pre><code class="language-text">z -&gt; y -&gt; x
+<p>A value is one of:</p>
+<pre><code class="language-text">Value
+    := Lit(Lit)
+    | Con { i1:Term, ..., iN:Term }
+    | Ref(Addr)
 </code></pre>
-<p>This representation distinguishes direct dependencies from transitive dependencies.</p>
-<h2 id="4-reach"><a class="header" href="#4-reach">4. Reach</a></h2>
-<p><code>Reach</code> represents transitive reachability in the dependency graph.</p>
-<p>First, define the direct dependencies of a variable:</p>
-<p>\[
-Deps_E(x) = Roots(E(x))
-\]</p>
-<p>Then define reachability recursively:</p>
-<p>\[
-Reach_E^{(1)}(x) = Deps_E(x)
-\]</p>
-<p>\[
-Reach_E^{(k+1)}(x) = \bigcup_{y \in Reach_E^{(k)}(x)} Deps_E(y)
-\]</p>
-<p>The complete reachable set is:</p>
-<p>\[
-Reach_E(x) = \bigcup_{k=1}^{\infty} Reach_E^{(k)}(x)
-\]</p>
-<p>\(Reach_E(x)\) contains all variables reachable from <code>x</code> by following one or more dependency edges.</p>
-<p>It is not reflexive: <code>x</code> is not included unless a cycle leads back to <code>x</code>.</p>
-<p>For the example:</p>
-<pre><code class="language-text">x = Node(...)
-y = Ref(x)
-z = Node(first = y, second = 20)
-</code></pre>
-<p>we obtain:</p>
-<p>\[
-Reach_E(x) = \varnothing
-\]</p>
-<p>\[
-Reach_E(y) = \{x\}
-\]</p>
-<p>\[
-Reach_E(z) = \{y,x\}
-\]</p>
-<p>Thus, <code>Roots</code> describes direct dependencies, while <code>Reach</code> describes transitive dependencies.</p>
-<h2 id="5-safe-reference-assignment"><a class="header" href="#5-safe-reference-assignment">5. Safe Reference Assignment</a></h2>
-<p>Consider an assignment that stores a reference into a Node:</p>
-<pre><code class="language-text">n[i] = Ref(r)
-</code></pre>
-<p>This introduces a dependency edge:</p>
-<pre><code class="language-text">n -&gt; r
-</code></pre>
-<p>To preserve an acyclic dependency graph, the assignment must not introduce a path from <code>r</code> back to <code>n</code>.</p>
-<p>Therefore, the assignment is safe if:</p>
-<p>\[
-n \notin Reach_E(r)
-\]</p>
-<p>We define the corresponding constraint:</p>
-<p>\[
-AssignSafe(n[i] \leftarrow Ref(r)) \iff n \notin Reach_E(r)
-\]</p>
-<h3 id="51-replacing-an-existing-reference"><a class="header" href="#51-replacing-an-existing-reference">5.1 Replacing an existing reference</a></h3>
-<p>When an existing reference is overwritten, its old dependency edge must be removed before checking the new assignment.</p>
-<p>Otherwise, a valid replacement might be incorrectly rejected because the old edge still contributes to the reachability relation.</p>
-<p>Let \(E^-\) denote the environment or dependency graph after removing the old reference edge(s).</p>
-<p>The correct condition is:</p>
-<p>\[
-AssignSafe(n[i] \leftarrow Ref(r)) \iff n \notin Reach_{E^-}(r)
-\]</p>
-<p>The new edge \(n \rightarrow r\) is added only after this condition has been verified.</p>
-<h2 id="6-acyclicity-invariant"><a class="header" href="#6-acyclicity-invariant">6. Acyclicity Invariant</a></h2>
-<p>Assume that the initial dependency graph is acyclic:</p>
-<p>\[
-G_{E_0} \text{ is a DAG}
-\]</p>
-<p>Every subsequent reference assignment is required to satisfy <code>AssignSafe</code>.</p>
-<p>Adding an edge \(n \rightarrow r\) creates a cycle if and only if a path from <code>r</code> to <code>n</code> already exists.</p>
-<p>Since <code>AssignSafe</code> rejects exactly this case, every permitted assignment preserves acyclicity.</p>
-<p>Consequently, by induction:</p>
-<p>\[
-\forall t,\quad G_{E_t} \text{ is a DAG}
-\]</p>
-<p>This gives a static guarantee that the dependency graph contains no cycles, provided that all operations capable of introducing reference edges are subject to this constraint.</p>
-<h2 id="7-cached-analysis-information"><a class="header" href="#7-cached-analysis-information">7. Cached Analysis Information</a></h2>
-<p>The analysis can cache the following information:</p>
+<p>A <code>Clo</code> contains the function code and the environment captured when the closure
+was created.</p>
+<p>A <code>Ref(a)</code> refers to the runtime address <code>a</code> in the Heap.</p>
+<p>A <code>Con</code> contains its fields directly as Terms. Its fields do not have
+independent runtime addresses merely by virtue of being fields.</p>
+<h3 id="12-static-and-runtime-representations"><a class="header" href="#12-static-and-runtime-representations">1.2 Static and runtime representations</a></h3>
+<p>Static Reference Analysis does not use runtime <code>Addr</code> or inspect runtime <code>Heap</code>.</p>
+<p>Instead, it introduces <code>NodeId</code> as a static identifier for a Node and <code>Store</code> as
+a static representation of Node contents.</p>
+<p>The correspondence is conceptual:</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Information</th><th>Definition</th><th>Purpose</th></tr>
+<tr><th>Runtime</th><th>Static analysis</th></tr>
 </thead>
 <tbody>
-<tr><td>Roots</td><td>\(Roots(e)\)</td><td>Direct syntactic dependencies</td></tr>
-<tr><td>Deps</td><td>\(Deps_E(x)\)</td><td>Direct dependencies of a variable</td></tr>
-<tr><td>Reach</td><td>\(Reach_E(x)\)</td><td>Transitive dependencies</td></tr>
-<tr><td>Dependency graph</td><td>\(G_E\)</td><td>Graph representation of dependencies</td></tr>
+<tr><td><code>Addr</code></td><td><code>NodeId</code></td></tr>
+<tr><td><code>Heap</code></td><td><code>Store</code></td></tr>
+<tr><td><code>Ref(Addr)</code></td><td><code>Ref(NodeId)</code></td></tr>
+<tr><td><code>Clo(Code, Env)</code></td><td><code>Clo</code> with statically resolved captured dependencies</td></tr>
 </tbody>
 </table>
 </div>
-<p><code>Roots</code> is computed per expression and can be reused.</p>
-<p><code>Reach</code> can be computed on demand, particularly when validating reference assignments. Depending on the implementation, it may also be cached and incrementally updated.</p>
-<p>The distinction is important:</p>
+<p>A <code>NodeId</code> identifies a Node; it is not a runtime address.</p>
+<h2 id="2-node-and-store"><a class="header" href="#2-node-and-store">2. Node and Store</a></h2>
+<h3 id="21-nodeid"><a class="header" href="#21-nodeid">2.1 NodeId</a></h3>
+<p><code>NodeId</code> is a unique identifier assigned to each statically represented Node.</p>
+<p>Its concrete representation is implementation-dependent.</p>
+<h3 id="22-node"><a class="header" href="#22-node">2.2 Node</a></h3>
+<p>A Node is represented as:</p>
+<p>\[
+Node(e,E)
+\]</p>
+<p>where:</p>
 <ul>
-<li><code>Roots</code> is a local, syntax-directed property of an expression.</li>
-<li><code>Reach</code> is a transitive property derived from the dependency graph.</li>
-<li>The dependency graph provides a common representation that can be reused by multiple analyses.</li>
+<li>\(e\) is the expression stored in the Node.</li>
+<li>\(E\) is the environment used to resolve the variables occurring in \(e\).</li>
 </ul>
-<h2 id="8-applications"><a class="header" href="#8-applications">8. Applications</a></h2>
-<p>The dependency graph provides a common foundation for several analyses.</p>
-<h3 id="81-circular-reference-detection"><a class="header" href="#81-circular-reference-detection">8.1 Circular reference detection</a></h3>
-<p>A cycle in the dependency graph indicates a circular dependency.</p>
-<p>By enforcing <code>AssignSafe</code> on every reference assignment, the compiler can guarantee that such cycles are never created.</p>
-<h3 id="82-alias-analysis"><a class="header" href="#82-alias-analysis">8.2 Alias analysis</a></h3>
-<p>We can obtain the Nodes reachable from a variable by filtering its reachable set:</p>
+<p>The expression is not evaluated. The Node retains its expression and environment
+as static analysis information.</p>
+<p>The identity of a Node (<code>NodeId</code>) is independent of its contents.</p>
+<h3 id="23-store"><a class="header" href="#23-store">2.3 Store</a></h3>
+<p>The static Store maps NodeIds to Nodes:</p>
 <p>\[
-NodeReach_E(x) = ({x}\cap N_E) \cup (Reach_E(x)\cap N_E)
+Store : NodeId \rightarrow Node
 \]</p>
-<p>For an expression <code>e</code>, the reachable Nodes can be obtained from its direct roots:</p>
+<p>Updating a Node changes the contents associated with its NodeId, but does not
+change its identity.</p>
+<p>For example:</p>
 <p>\[
-NodeReach_E(e) = \bigcup_{x \in Roots(e)} NodeReach_E(x)
+Store’ = Store[n \mapsto Node(e,E)]
 \]</p>
-<p>If two values have intersecting reachable Node sets, they may refer to a common Node:</p>
+<p>replaces the contents of Node \(n\).</p>
+<h2 id="3-roots"><a class="header" href="#3-roots">3. Roots</a></h2>
+<p><code>Roots</code> describes the set of NodeIds directly referenced by a value.</p>
 <p>\[
-NodeReach_E(a) \cap NodeReach_E(b) \neq \varnothing
+Roots : Value \rightarrow \mathcal{P}(NodeId)
 \]</p>
-<p>This provides a basis for alias analysis.</p>
-<p>More precise may-alias and must-alias analyses can be built on top of this information.</p>
-<h3 id="83-reuse-analysis"><a class="header" href="#83-reuse-analysis">8.3 Reuse analysis</a></h3>
-<p>When considering whether a Node can be reused for an in-place update, we need to determine whether another live value can observe its current contents.</p>
-<p>The dependency graph provides the reference and alias information needed for this analysis.</p>
-<p>Combined with liveness analysis and mutation information, it can help determine whether a Node is safe to reuse.</p>
-<p>In particular, the analysis needs to distinguish between:</p>
+<h3 id="31-literals"><a class="header" href="#31-literals">3.1 Literals</a></h3>
+<p>A literal does not reference any Node:</p>
+<p>\[
+Roots(Lit(l))=\varnothing
+\]</p>
+<h3 id="32-references"><a class="header" href="#32-references">3.2 References</a></h3>
+<p>A reference directly refers to its target Node:</p>
+<p>\[
+Roots(Ref(n))=\{n\}
+\]</p>
+<h3 id="33-constructors"><a class="header" href="#33-constructors">3.3 Constructors</a></h3>
+<p>For a constructor value:</p>
+<p>\[
+Roots(Con(v_1,\ldots,v_k)) = \bigcup_{i=1}^{k}Roots(v_i)
+\]</p>
+<p>Only direct references contained in its fields are included.</p>
+<h3 id="34-closures"><a class="header" href="#34-closures">3.4 Closures</a></h3>
+<p>A closure may retain references through its captured environment.</p>
+<p>For a closure:</p>
+<p>\[
+Clo(\lambda x.e,E)
+\]</p>
+<p>its roots are determined by the free variables of the function:</p>
+<p>\[
+Roots(Clo(\lambda x.e,E)) = \bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
+\]</p>
+<p>where:</p>
+<p>\[
+FV(\lambda x.e)=FV(e)\setminus\{x\}
+\]</p>
+<p>The function body is not evaluated. Only its free variables and their captured
+values are considered.</p>
+<h2 id="4-roots_e"><a class="header" href="#4-roots_e">4. Roots_E</a></h2>
+<p><code>Roots_E(e)</code> describes the set of NodeIds directly referenced by expression
+\(e\) under environment \(E\).</p>
+<p>\[
+Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
+\]</p>
+<p>Unlike <code>Reach</code>, <code>Roots_E</code> does not recursively traverse the Store.</p>
+<h3 id="41-variables"><a class="header" href="#41-variables">4.1 Variables</a></h3>
+<p>A variable refers to the value bound to it in the environment:</p>
+<p>\[
+Roots_E(x)=Roots(E(x))
+\]</p>
+<h3 id="42-literals"><a class="header" href="#42-literals">4.2 Literals</a></h3>
+<p>A literal has no direct references:</p>
+<p>\[
+Roots_E(Lit(l))=\varnothing
+\]</p>
+<h3 id="43-constructors"><a class="header" href="#43-constructors">4.3 Constructors</a></h3>
+<p>For a constructor expression:</p>
+<p>\[
+Roots_E(Con(e_1,\ldots,e_k)) = \bigcup_{i=1}^{k}Roots_E(e_i)
+\]</p>
+<p>The resulting constructor value contains the values of its fields, so its direct
+references are the union of the references in those fields.</p>
+<h3 id="44-function-expressions"><a class="header" href="#44-function-expressions">4.4 Function expressions</a></h3>
+<p>Evaluating a lambda expression creates a closure that captures its free
+variables.</p>
+<p>Therefore:</p>
+<p>\[
+Roots_E(\lambda x.e) = Roots(Clo(\lambda x.e,E))
+\]</p>
+<p>Equivalently:</p>
+<p>\[
+Roots_E(\lambda x.e) = \bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
+\]</p>
+<p>The function body is not evaluated when calculating its roots.</p>
+<h3 id="45-function-application"><a class="header" href="#45-function-application">4.5 Function application</a></h3>
+<p>For a function application:</p>
+<p>\[
+Roots_E(e_1\ e_2) = Roots_E(e_1)\cup Roots_E(e_2)
+\]</p>
+<p>Both the function expression and the argument expression may contribute
+references to the resulting value.</p>
+<p>This rule is conservative: it includes direct dependencies from both expressions
+without evaluating the application.</p>
+<h3 id="46-let-expressions"><a class="header" href="#46-let-expressions">4.6 Let expressions</a></h3>
+<p>A let expression:</p>
+<p>\[
+let\ x=e_1\ in\ e_2
+\]</p>
+<p>is equivalent to function application:</p>
+<p>\[
+(\lambda x.e_2)\ e_1
+\]</p>
+<p>Therefore, no separate <code>Roots_E</code> rule is required.</p>
+<p>Its roots are determined by the function application and lambda rules.</p>
+<h3 id="47-conditional-expressions"><a class="header" href="#47-conditional-expressions">4.7 Conditional expressions</a></h3>
+<p>For a conditional expression:</p>
+<p>\[
+if\ e_1\ then\ e_2\ else\ e_3
+\]</p>
+<p>the roots include the condition and both possible result expressions:</p>
+<p>\[
+Roots_E(if\ e_1\ then\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
+\]</p>
+<p>The condition is included because it is evaluated as part of evaluating the
+conditional expression.</p>
+<p>Both branches are included because either branch may produce the result.</p>
+<h3 id="48-match-expressions"><a class="header" href="#48-match-expressions">4.8 Match expressions</a></h3>
+<p>A match expression is handled in the same way as a conditional expression.</p>
+<p>Its roots include:</p>
+<ul>
+<li>The scrutinee expression.</li>
+<li>Every possible branch expression.</li>
+</ul>
+<p>Pattern-bound variables are resolved in the corresponding branch environment.</p>
+<h3 id="49-direct-dependencies-only"><a class="header" href="#49-direct-dependencies-only">4.9 Direct dependencies only</a></h3>
+<p>Consider:</p>
+<pre><code class="language-phox">let x = new 10;
+let y = new (Some x);
+let z = Some y;
+</code></pre>
+<p>Suppose the corresponding NodeIds are \(n_x\) and \(n_y\).</p>
+<p>The direct roots of the values are:</p>
+<p>\[
+Roots(Ref(n_x))=\{n_x\}
+\]</p>
+<p>\[
+Roots(Ref(n_y))=\{n_y\}
+\]</p>
+<p>The expression <code>Some y</code> has:</p>
+<p>\[
+Roots_E(Some\ y)=\{n_y\}
+\]</p>
+<p>It does not directly contain \(n_x\).</p>
+<p>The dependency on \(n_x\) is obtained by following the dependency of \(n_y\).<br>This is the responsibility of <code>Reach</code>.</p>
+<h2 id="5-expression-semantics"><a class="header" href="#5-expression-semantics">5. Expression Semantics</a></h2>
+<p>This section describes the meaning of each expression form relevant to Static
+Reference Analysis.</p>
+<p>The runtime semantics below describe how expressions affect the runtime Heap and
+environment. The static rules describe how their reference dependencies are
+represented.</p>
+<h3 id="51-variable"><a class="header" href="#51-variable">5.1 Variable</a></h3>
+<pre><code class="language-phox">x
+</code></pre>
+<p>A variable evaluates to the Term bound to it in the current environment.</p>
+<p>Its static roots are:</p>
+<p>\[
+Roots_E(x)=Roots(E(x))
+\]</p>
+<h3 id="52-lambda-expression"><a class="header" href="#52-lambda-expression">5.2 Lambda expression</a></h3>
+<pre><code class="language-phox">λx.e
+</code></pre>
+<p>A lambda expression evaluates to a closure containing:</p>
+<ul>
+<li>The function code \(\lambda x.e\).</li>
+<li>The environment captured at closure creation.</li>
+</ul>
+<p>Its static roots are the roots of the captured free variables:</p>
+<p>\[
+Roots_E(\lambda x.e)=\bigcup_{v\in FV(\lambda x.e)}Roots(E(v))
+\]</p>
+<p>The body is not evaluated at closure creation.</p>
+<h3 id="53-function-application"><a class="header" href="#53-function-application">5.3 Function application</a></h3>
+<pre><code class="language-phox">e_1 e_2
+</code></pre>
+<p>A function application evaluates the function expression and argument
+expression, then applies the resulting function to the argument.</p>
+<p>For a closure, the function body is evaluated in the captured environment
+extended with the argument binding.</p>
+<p>Its static roots are:</p>
+<p>\[
+Roots_E(e_1\ e_2)=Roots_E(e_1)\cup Roots_E(e_2)
+\]</p>
+<h3 id="54-let-expression"><a class="header" href="#54-let-expression">5.4 Let expression</a></h3>
+<pre><code class="language-phox">let x = e_1 in e_2
+</code></pre>
+<p>A let expression evaluates \(e_1\), binds the resulting value to \(x\), and
+evaluates \(e_2\) in the extended environment.</p>
+<p>It is equivalent to:</p>
+<pre><code class="language-phox">(λx.e_2) e_1
+</code></pre>
+<p>Consequently, its static dependencies are determined by the rules for lambda
+expressions and function application.</p>
+<h3 id="55-conditional-expression"><a class="header" href="#55-conditional-expression">5.5 Conditional expression</a></h3>
+<pre><code class="language-phox">if e_1 then e_2 else e_3
+</code></pre>
+<p>A conditional evaluates its condition \(e_1\), then evaluates the selected branch.</p>
+<p>Its static roots include all three expressions:</p>
+<p>\[
+Roots_E(if\ e_1\ then\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
+\]</p>
+<p>The analysis does not attempt to determine which branch will execute.</p>
+<h3 id="56-literal-expression"><a class="header" href="#56-literal-expression">5.6 Literal expression</a></h3>
+<pre><code class="language-phox">10
+</code></pre>
+<p>A literal evaluates to a literal value:</p>
+<p>\[
+Roots_E(Lit(l))=\varnothing
+\]</p>
+<h3 id="57-constructor-expression"><a class="header" href="#57-constructor-expression">5.7 Constructor expression</a></h3>
+<pre><code class="language-phox">Con(e_1, ..., e_k)
+</code></pre>
+<p>A constructor expression evaluates its field expressions and constructs a value
+containing the resulting Terms.</p>
+<p>Its static roots are:</p>
+<p>\[
+Roots_E(Con(e_1,\ldots,e_k))=\bigcup_{i=1}^{k}Roots_E(e_i)
+\]</p>
+<h3 id="58-allocation-expression"><a class="header" href="#58-allocation-expression">5.8 Allocation expression</a></h3>
+<pre><code class="language-phox">new e
+</code></pre>
+<p>An allocation expression evaluates \(e\), allocates a new runtime address,
+stores the resulting Term at that address, and returns a reference to it.</p>
+<p>Conceptually:</p>
+<p>\[
+\frac{
+\begin{aligned}
+&amp;\langle e,E,Heap\rangle
+\Downarrow
+\langle t,Heap_1\rangle\
+&amp;a\ \text{fresh}\
+&amp;\
+&amp;Heap_2=Heap_1[a\mapsto t]
+\end{aligned}
+}{
+\langle new\ e,E,Heap\rangle
+\Downarrow
+\langle Ref(a),Heap_2\rangle
+}
+\]</p>
+<p>For static analysis, allocation creates a fresh NodeId \(n\) and adds a Node
+to the Store:</p>
+<p>\[
+\frac{
+n\ \text{fresh}
+\qquad
+Store’=Store[n\mapsto Node(e,E)]
+}{
+\langle new\ e,E,Store\rangle
+\longrightarrow
+\langle Ref(n),Store’\rangle
+}
+\]</p>
+<p>Therefore:</p>
+<p>\[
+Roots_E(new\ e)=\{n\}
+\]</p>
+<p>The references contained in \(e\) are not directly included in the roots of
+the allocation expression. They become dependencies of the newly created Node
+and are obtained through <code>Deps</code> and <code>Reach</code>.</p>
+<p>Allocation itself does not introduce a dependency from an existing Node to the
+new Node. Since \(n\) is fresh, no existing Node can already depend on it.
+Therefore, allocation does not require a circular reference check.</p>
+<h3 id="59-reference-assignment"><a class="header" href="#59-reference-assignment">5.9 Reference assignment</a></h3>
+<pre><code class="language-phox">r &lt;- e
+</code></pre>
+<p>A reference assignment evaluates the left-hand side to identify the target
+reference, evaluates the right-hand side, and replaces the contents stored at
+the target address.</p>
+<p>If the left-hand side resolves to <code>Ref(a)</code>, the runtime Heap is updated:</p>
+<p>\[
+Heap’=Heap[a\mapsto t]
+\]</p>
+<p>where \(t\) is the evaluated right-hand side.</p>
+<p>For static analysis, if the left-hand side resolves to <code>Ref(n)</code>, the NodeId
+remains unchanged. Only its contents in the Store are replaced:</p>
+<p>\[
+Store’=Store[n\mapsto Node(e,E)]
+\]</p>
+<p>The assignment is permitted only if it does not introduce a circular dependency.
+The precise condition is defined in Section 8.</p>
+<p>The right-hand side is represented by its expression and environment in the
+updated Node. It is not evaluated by Static Reference Analysis.</p>
+<h2 id="6-node-dependencies"><a class="header" href="#6-node-dependencies">6. Node Dependencies</a></h2>
+<p>The direct dependencies of a Node are determined by the roots of its contents.</p>
+<p>First, define the roots of a Node:</p>
+<p>\[
+Roots(Node(e,E)):=Roots_E(e)
+\]</p>
+<p>Then define the direct dependencies of Node \(n\):</p>
+<p>\[
+Deps_{Store}(n):=Roots(Store(n))
+\]</p>
+<p>Therefore, if:</p>
+<p>\[
+Store(n)=Node(e,E)
+\]</p>
+<p>then:</p>
+<p>\[
+Deps_{Store}(n)=Roots_E(e)
+\]</p>
+<p>A directed edge:</p>
+<p>\[
+n\rightarrow m
+\]</p>
+<p>exists exactly when:</p>
+<p>\[
+m\in Deps_{Store}(n)
+\]</p>
+<p>This edge means that the contents of Node \(n\) directly reference Node \(m\).</p>
+<p>For example:</p>
+<pre><code class="language-phox">let x = new Nil;
+let y = new (Cons 10 x);
+let z = new (Cons 20 y);
+</code></pre>
+<p>Let the corresponding NodeIds be \(n_x,n_y,n_z\).</p>
+<p>The Store contains:</p>
+<p>\[
+Store(n_x)=Node(Nil,E)
+\]</p>
+<p>\[
+Store(n_y)=Node(Cons(10,x),E)
+\]</p>
+<p>\[
+Store(n_z)=Node(Cons(20,y),E)
+\]</p>
+<p>The direct dependencies are:</p>
+<p>\[
+Deps_{Store}(n_x)=\varnothing
+\]</p>
+<p>\[
+Deps_{Store}(n_y)=\{n_x\}
+\]</p>
+<p>\[
+Deps_{Store}(n_z)=\{n_y\}
+\]</p>
+<p>Thus, the dependency graph is:</p>
+<pre><code class="language-text">n_z -&gt; n_y -&gt; n_x
+</code></pre>
+<h2 id="7-reach"><a class="header" href="#7-reach">7. Reach</a></h2>
+<p><code>Reach</code> represents transitive reachability through the Node dependency graph.</p>
+<p>For a NodeId \(n\), define:</p>
+<p>\[
+Reach(Store,n) = \{n\} \cup \bigcup_{m\in Deps_{Store}(n)} Reach(Store,m)
+\]</p>
+<p>For a set of NodeIds \(S\), define:</p>
+<p>\[
+Reach(Store,S) = \bigcup_{n\in S}Reach(Store,n)
+\]</p>
+<p>Unlike <code>Roots</code>, <code>Reach</code> includes the starting Node itself.</p>
+<p>For the previous example:</p>
+<p>\[
+Reach(Store,n_x)=\{n_x\}
+\]</p>
+<p>\[
+Reach(Store,n_y)=\{n_y,n_x\}
+\]</p>
+<p>\[
+Reach(Store,n_z)=\{n_z,n_y,n_x\}
+\]</p>
+<p>Thus:</p>
+<ul>
+<li><code>Roots_E</code> describes direct references from an expression.</li>
+<li><code>Deps</code> describes direct references from a Node.</li>
+<li><code>Reach</code> describes all Nodes reachable through those references.</li>
+</ul>
+<p>The Store is maintained as an acyclic graph. Therefore, the recursive definition
+of <code>Reach</code> does not need to handle existing cycles.</p>
+<h2 id="8-circular-reference-detection"><a class="header" href="#8-circular-reference-detection">8. Circular Reference Detection</a></h2>
+<p>Circular references are prevented by checking assignments that modify existing
+Nodes.</p>
+<h3 id="81-assignment-condition"><a class="header" href="#81-assignment-condition">8.1 Assignment condition</a></h3>
+<p>Suppose the left-hand side of an assignment resolves to:</p>
+<p>\[
+Ref(n)
+\]</p>
+<p>and the right-hand side is \(e\), evaluated in environment \(E\).</p>
+<p>The assignment would replace the contents of Node \(n\) with:</p>
+<p>\[
+Node(e,E)
+\]</p>
+<p>The direct dependencies introduced by this replacement are:</p>
+<p>\[
+Roots_E(e)
+\]</p>
+<p>A circular dependency is introduced exactly when one of these dependencies can
+already reach \(n\) through the current Store.</p>
+<p>Therefore, the assignment is permitted if and only if:</p>
+<p>\[
+\boxed{
+n\notin Reach(Store,Roots_E(e))
+}
+\]</p>
+<p>If this condition holds, update the Store:</p>
+<p>\[
+Store’=Store[n\mapsto Node(e,E)]
+\]</p>
+<p>Otherwise, reject the assignment.</p>
+<p>The check is performed against the Store <strong>before</strong> the assignment.</p>
+<h3 id="82-example"><a class="header" href="#82-example">8.2 Example</a></h3>
+<p>Consider:</p>
+<pre><code class="language-phox">let x = new Nil;
+let y = new (Cons 10 x);
+let z = new (Cons 20 y);
+
+x &lt;- Cons 30 z;
+</code></pre>
+<p>Assume the NodeIds are \(n_1,n_2,n_3\), respectively.</p>
+<p>Before the assignment:</p>
+<p>\[
+Store(n_1)=Node(Nil,E)
+\]</p>
+<p>\[
+Store(n_2)=Node(Cons(10,x),E)
+\]</p>
+<p>\[
+Store(n_3)=Node(Cons(20,y),E)
+\]</p>
+<p>The existing dependency graph is:</p>
+<pre><code class="language-text">n_3 -&gt; n_2 -&gt; n_1
+</code></pre>
+<p>The assignment:</p>
+<pre><code class="language-phox">x &lt;- Cons 30 z
+</code></pre>
+<p>would replace the contents of \(n_1\) with:</p>
+<p>\[
+Node(Cons(30,z),E)
+\]</p>
+<p>The right-hand side has:</p>
+<p>\[
+Roots_E(Cons(30,z))=\{n_3\}
+\]</p>
+<p>Following the existing dependencies:</p>
+<p>\[
+Reach(Store,\{n_3\})=\{n_3,n_2,n_1\}
+\]</p>
+<p>Therefore:</p>
+<p>\[
+n_1\in Reach(Store,\{n_3\})
+\]</p>
+<p>The assignment is rejected because it would introduce the cycle:</p>
+<pre><code class="language-text">n_1 -&gt; n_3 -&gt; n_2 -&gt; n_1
+</code></pre>
+<h3 id="83-acyclicity-invariant"><a class="header" href="#83-acyclicity-invariant">8.3 Acyclicity invariant</a></h3>
+<p>Assume that the initial Store is acyclic:</p>
+<p>\[
+Store_0\text{ is acyclic}
+\]</p>
+<p>Allocation creates a fresh Node and cannot introduce an edge from an existing
+Node to that new Node.</p>
+<p>Every assignment is checked using the condition in Section 8.1.</p>
+<p>Replacing the contents of Node \(n\) introduces a cycle if and only if one of
+the new direct dependencies can already reach \(n\).</p>
+<p>The assignment condition rejects exactly this case.</p>
+<p>Consequently, by induction, every permitted operation preserves the acyclicity
+of the Store:</p>
+<p>\[
+\boxed{
+\forall t,\quad Store_t\text{ is acyclic}
+}
+\]</p>
+<p>This guarantee assumes that every operation capable of introducing or changing
+Node dependencies is subject to the corresponding check.</p>
+<h2 id="9-applications"><a class="header" href="#9-applications">9. Applications</a></h2>
+<p>The dependency graph provides a common foundation for further compiler analyses.</p>
+<h3 id="91-alias-analysis"><a class="header" href="#91-alias-analysis">9.1 Alias analysis</a></h3>
+<p>The Nodes reachable from an expression can be obtained from its roots:</p>
+<p>\[
+NodeReach_E(e)=Reach(Store,Roots_E(e))
+\]</p>
+<p>If two expressions have intersecting reachable Node sets:</p>
+<p>\[
+NodeReach_E(e_1)\cap NodeReach_E(e_2)\neq\varnothing
+\]</p>
+<p>they may refer to a common Node.</p>
+<p>This provides a basis for may-alias analysis.</p>
+<p>More precise may-alias and must-alias analyses can be built on top of this
+information.</p>
+<h3 id="92-reuse-analysis"><a class="header" href="#92-reuse-analysis">9.2 Reuse analysis</a></h3>
+<p>To determine whether a Node can be reused for an in-place update, the compiler
+needs to know whether another live value can observe its contents.</p>
+<p>The dependency graph provides the reference and alias information required for
+this analysis.</p>
+<p>Combined with liveness and mutation information, it can help distinguish between:</p>
 <ul>
 <li>Nodes reachable only from the value being updated.</li>
 <li>Nodes that may also be reachable from other live values.</li>
 </ul>
-<p>The latter cannot be modified in place without considering the effects on those other values.</p>
-<h3 id="84-job-to-job-sharing-analysis"><a class="header" href="#84-job-to-job-sharing-analysis">8.4 Job-to-Job sharing analysis</a></h3>
-<p>For concurrent execution, we can calculate the Nodes reachable from values captured or retained by each Job.</p>
-<p>For two Jobs, <code>A</code> and <code>B</code>, define:</p>
+<p>The latter cannot be modified in place without considering the effects on those
+other values.</p>
+<h3 id="93-job-to-job-reference-sharing-analysis"><a class="header" href="#93-job-to-job-reference-sharing-analysis">9.3 Job-to-Job reference sharing analysis</a></h3>
+<p>For concurrent execution, the Nodes reachable from values captured or retained
+by each Job can be calculated.</p>
+<p>For two Jobs \(A\) and \(B\), define:</p>
 <p>\[
-SharedNodes(A,B) = NodeReach_E(A) \cap NodeReach_E(B)
+SharedNodes(A,B) = NodeReach_E(A)\cap NodeReach_E(B)
 \]</p>
 <p>If this set is non-empty, the Jobs may share Nodes.</p>
-<p>Combining this information with access modes (read-only or mutable) can help determine whether synchronization is necessary.</p>
-<p>This analysis can be extended to account for values retained by Channels and other runtime structures.</p>
-<h3 id="85-escape-and-retention-analysis"><a class="header" href="#85-escape-and-retention-analysis">8.5 Escape and retention analysis</a></h3>
-<p>The same reachability information can also be used to analyze whether a Node escapes a particular scope or Job, and which values may keep it alive.</p>
+<p>Combining this information with access modes, such as read-only and mutable
+access, can help determine whether synchronization is necessary.</p>
+<p>The analysis can be extended to include values retained by Channels and other
+runtime structures.</p>
+<h3 id="94-escape-and-retention-analysis"><a class="header" href="#94-escape-and-retention-analysis">9.4 Escape and retention analysis</a></h3>
+<p>The same reachability information can be used to determine whether a Node
+escapes a particular scope or Job, and which values may retain references to it.</p>
 <p>This can provide useful information for memory management and lifetime analysis.</p>
-<h2 id="9-compiler-pipeline"><a class="header" href="#9-compiler-pipeline">9. Compiler Pipeline</a></h2>
-<p>The analysis is independent of type inference and type-class resolution.</p>
+<h2 id="10-compiler-pipeline"><a class="header" href="#10-compiler-pipeline">10. Compiler Pipeline</a></h2>
+<p>Static Reference Analysis is performed after successful type inference and type
+checking.</p>
 <p>A possible compiler pipeline is:</p>
 <ol>
 <li>Parse source code.</li>
 <li>Perform type inference and type checking.</li>
-<li>Classify expressions and variables for reference analysis.</li>
-<li>Calculate and cache <code>Roots</code>.</li>
-<li>Construct the dependency graph.</li>
-<li>Generate and validate <code>AssignSafe</code> constraints.</li>
+<li>Construct the static environments and initial Store.</li>
+<li>Calculate and cache <code>Roots_E</code> for expressions.</li>
+<li>Calculate <code>Deps</code> for Nodes.</li>
+<li>Construct or query the dependency graph.</li>
+<li>Validate assignments using the circular reference condition.</li>
 <li>Perform further analyses such as alias analysis, reuse analysis, and Job-to-Job sharing analysis.</li>
 </ol>
-<p>By running reference analysis only after successful type checking, it can remain largely orthogonal to the Hindley–Milner type system and MPTC resolution.</p>
+<p>The analysis is independent of the Hindley–Milner type system and type-class
+resolution, except that it assumes expressions have already passed type
+checking.</p>
 
                     </main>
 
