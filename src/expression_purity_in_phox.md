@@ -14,13 +14,15 @@ All values in Phox are pure and referentially transparent.
 
 ## Pure expressions
 Most expressions are also pure.  
-Any expression that does **not** contain a procedure is pure.
+Any expression that does **not** contain a procedure call is pure.
 
 ## Impure expressions
-Expressions that contain a procedure — either procedural block (`proc!{...}`)  
-or procedure call (calling a procedure such as `foo!()`) — are impure.  
-Expressions that contain a procedure implicitly in nested sub-expressions are also impure.  
+
+Expressions that contain a procedure call (calling a procedure such as `foo!()`) are impure.  
+Expressions that contain a procedure call in a nested sub-expression are also impure.  
 Impure expressions cannot be statically evaluated.
+
+This is because procedure calls may depend on side effects.
 
 > [!NOTE]
 > The “procedure” language feature is planned to be provided
