@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9aa826be.js";
+            window.path_to_searchindex_js = "searchindex-c38172c0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-06099c2d.js"></script>
@@ -1917,7 +1917,7 @@ Env  := Vec&lt;Addr&gt;
 <p>A value is one of:</p>
 <pre><code class="language-text">Value
     := Lit(Lit)
-    | Con { i1:Term, ..., iN:Term }
+    | Con(Term, ..., Term)
     | Ref(Addr)
 </code></pre>
 <p>A <code>Clo</code> contains the function code and the environment captured when the closure
@@ -1925,7 +1925,32 @@ was created.</p>
 <p>A <code>Ref(a)</code> refers to the runtime address <code>a</code> in the Heap.</p>
 <p>A <code>Con</code> contains its fields directly as Terms. Its fields do not have
 independent runtime addresses merely by virtue of being fields.</p>
-<h3 id="12-static-and-runtime-representations"><a class="header" href="#12-static-and-runtime-representations">1.2 Static and runtime representations</a></h3>
+<h3 id="12-expression"><a class="header" href="#12-expression">1.2 Expression</a></h3>
+<p>A code (i.e. expression) is one of:</p>
+<pre><code class="language-text">Code
+    := Lit(Lit)             // constructs simple value
+    |  Con(e1, ..., eN)     // constructs composite value
+    |  new e                // allocation (constructs `Ref(a)`, which refers to the allocated Term)
+    |  r &lt;- e               // assignment (where `r = Ref(a)`)
+    |  x                    // variable
+    |  λx.e                 // function (λ abstraction)
+    |  e1 e2                // function application
+    |  let x = e1 in e2     // let binding; same as `(λx.e2) e1`
+    |  if (e0) e1 else e2   // conditional expression ; same as `match (e0) { true =&gt; e1, false =&gt; e2 }`
+    |  match (e0) {         // pattern matching
+         p1 =&gt; e1,
+         ...,
+         pN =&gt; eN
+       }
+</code></pre>
+<p>A pattern is one of:</p>
+<pre><code class="language-text">Pat
+    := _                  // wildcard pattern
+    |  x                  // variable pattern
+    |  Lit(Lit)           // literal pattern (matches to simple value)
+    |  Con(p1, ..., pN)   // constructor pattern (matches to composite value)
+</code></pre>
+<h3 id="13-static-and-runtime-representations"><a class="header" href="#13-static-and-runtime-representations">1.3 Static and runtime representations</a></h3>
 <p>Static Reference Analysis does not use runtime <code>Addr</code> or inspect runtime <code>Heap</code>.</p>
 <p>Instead, it introduces <code>NodeId</code> as a static identifier for a Node and <code>Store</code> as
 a static representation of Node contents.</p>
@@ -2010,18 +2035,18 @@ FV(\lambda x.e)=FV(e)\setminus\{x\}
 \]</p>
 <p>The function body is not evaluated. Only its free variables and their captured
 values are considered.</p>
-<h2 id="4-roots_e"><a class="header" href="#4-roots_e">4. Roots_E</a></h2>
+<h2 id="4-rootse"><a class="header" href="#4-rootse">4. Roots<sub>E</sub></a></h2>
 <p><code>Roots_E(e)</code> describes the set of NodeIds directly referenced by expression
 \(e\) under environment \(E\).</p>
 <p>\[
-Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
+Roots_E : Code \times Env \rightarrow \mathcal{P}(NodeId)
 \]</p>
 <p>Unlike <code>Reach</code>, <code>Roots_E</code> does not recursively traverse the Store.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The definition above describes the basic form of \(Roots_E\).<br>Since the expressions <code>new e</code> and <code>r &lt;- e</code> also update the Store,<br>the complete form of \(Roots_E\), including Store updates, is:</p>
 <p>\[
-Roots_E : Expr \times Environment \times Store \rightarrow \mathcal{P}(NodeId) \times Store
+Roots_E : Code \times Env \times Store \rightarrow \mathcal{P}(NodeId) \times Store
 \]</p>
 </blockquote>
 <h3 id="41-variables"><a class="header" href="#41-variables">4.1 Variables</a></h3>
@@ -2076,11 +2101,11 @@ let\ x=e_1\ in\ e_2
 <h3 id="47-conditional-expressions"><a class="header" href="#47-conditional-expressions">4.7 Conditional expressions</a></h3>
 <p>For a conditional expression:</p>
 <p>\[
-if\ e_1\ then\ e_2\ else\ e_3
+if\ (e_1)\ e_2\ else\ e_3
 \]</p>
 <p>the roots include the condition and both possible result expressions:</p>
 <p>\[
-Roots_E(if\ e_1\ then\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
+Roots_E(if\ (e_1)\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
 \]</p>
 <p>The condition is included because it is evaluated as part of evaluating the
 conditional expression.</p>
@@ -2162,12 +2187,12 @@ evaluates \(e_2\) in the extended environment.</p>
 <p>Consequently, its static dependencies are determined by the rules for lambda
 expressions and function application.</p>
 <h3 id="55-conditional-expression"><a class="header" href="#55-conditional-expression">5.5 Conditional expression</a></h3>
-<pre><code class="language-phox">if e_1 then e_2 else e_3
+<pre><code class="language-phox">if (e_1) e_2 else e_3
 </code></pre>
 <p>A conditional evaluates its condition \(e_1\), then evaluates the selected branch.</p>
 <p>Its static roots include all three expressions:</p>
 <p>\[
-Roots_E(if\ e_1\ then\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
+Roots_E(if\ (e_1)\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
 \]</p>
 <p>The analysis does not attempt to determine which branch will execute.</p>
 <h3 id="56-literal-expression"><a class="header" href="#56-literal-expression">5.6 Literal expression</a></h3>
