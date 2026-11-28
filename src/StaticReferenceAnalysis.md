@@ -55,7 +55,7 @@ A value is one of:
 ```text
 Value
     := Lit(Lit)
-    | Con { i1:Term, ..., iN:Term }
+    | Con(Term, ..., Term)
     | Ref(Addr)
 ```
 
@@ -67,7 +67,40 @@ A `Ref(a)` refers to the runtime address `a` in the Heap.
 A `Con` contains its fields directly as Terms. Its fields do not have
 independent runtime addresses merely by virtue of being fields.
 
-### 1.2 Static and runtime representations
+
+### 1.2 Expression
+
+A code (i.e. expression) is one of:
+
+```text
+Code
+    := Lit(Lit)             // constructs simple value
+    |  Con(e1, ..., eN)     // constructs composite value
+    |  new e                // allocation (constructs `Ref(a)`, which refers to the allocated Term)
+    |  r <- e               // assignment (where `r = Ref(a)`)
+    |  x                    // variable
+    |  λx.e                 // function (λ abstraction)
+    |  e1 e2                // function application
+    |  let x = e1 in e2     // let binding; same as `(λx.e2) e1`
+    |  if (e0) e1 else e2   // conditional expression ; same as `match (e0) { true => e1, false => e2 }`
+    |  match (e0) {         // pattern matching
+         p1 => e1,
+         ...,
+         pN => eN
+       }
+```
+
+A pattern is one of:
+
+```text
+Pat
+    := _                  // wildcard pattern
+    |  x                  // variable pattern
+    |  Lit(Lit)           // literal pattern (matches to simple value)
+    |  Con(p1, ..., pN)   // constructor pattern (matches to composite value)
+```
+
+### 1.3 Static and runtime representations
 
 Static Reference Analysis does not use runtime `Addr` or inspect runtime `Heap`.
 
@@ -189,13 +222,13 @@ FV(\lambda x.e)=FV(e)\setminus\\{x\\}
 The function body is not evaluated. Only its free variables and their captured
 values are considered.
 
-## 4. Roots_E
+## 4. Roots<sub>E</sub>
 
 `Roots_E(e)` describes the set of NodeIds directly referenced by expression
 \\(e\\) under environment \\(E\\).
 
 \\[
-Roots_E : Expr \times Environment \rightarrow \mathcal{P}(NodeId)
+Roots_E : Code \times Env \rightarrow \mathcal{P}(NodeId)
 \\]
 
 Unlike `Reach`, `Roots_E` does not recursively traverse the Store.
@@ -206,7 +239,7 @@ Unlike `Reach`, `Roots_E` does not recursively traverse the Store.
 > the complete form of \\(Roots_E\\), including Store updates, is:
 > 
 > \\[
-> Roots_E : Expr \times Environment \times Store \rightarrow \mathcal{P}(NodeId) \times Store
+> Roots_E : Code \times Env \times Store \rightarrow \mathcal{P}(NodeId) \times Store
 > \\]
 
 
@@ -293,13 +326,13 @@ Its roots are determined by the function application and lambda rules.
 For a conditional expression:
 
 \\[
-if\ e_1\ then\ e_2\ else\ e_3
+if\ (e_1)\ e_2\ else\ e_3
 \\]
 
 the roots include the condition and both possible result expressions:
 
 \\[
-Roots_E(if\ e_1\ then\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
+Roots_E(if\ (e_1)\ e_2\ else\ e_3) = Roots_E(e_1) \cup Roots_E(e_2) \cup Roots_E(e_3)
 \\]
 
 The condition is included because it is evaluated as part of evaluating the
@@ -432,7 +465,7 @@ expressions and function application.
 ### 5.5 Conditional expression
 
 ```phox
-if e_1 then e_2 else e_3
+if (e_1) e_2 else e_3
 ```
 
 A conditional evaluates its condition \\(e_1\\), then evaluates the selected branch.
@@ -440,7 +473,7 @@ A conditional evaluates its condition \\(e_1\\), then evaluates the selected bra
 Its static roots include all three expressions:
 
 \\[
-Roots_E(if\ e_1\ then\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
+Roots_E(if\ (e_1)\ e_2\ else\ e_3)=Roots_E(e_1)\cup Roots_E(e_2)\cup Roots_E(e_3)
 \\]
 
 The analysis does not attempt to determine which branch will execute.
